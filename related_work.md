@@ -68,3 +68,16 @@ The DB introduced an additional 15 minute tolerance punctuality definition :D (h
 "Längere Umsteigezeiten werden laut [Vorstandsmitglied Michael] Peterson für etwa 800 Anschlussverbindungen hinterlegt. Je nach Verbindung könnten dies beispielsweise statt bislang 8 Minuten nun 10, 12 oder 14 Minuten sein, erklärte Peterson. Im Ergebnis kämen Fahrgäste 10, 20 oder 30 Minuten später am Ziel an. Fahrgäste können individuell auch kürzere oder längere Umsteigezeiten im System einstellen." (https://rp-online.de/wirtschaft/bahn-plant-laengere-umsteigezeit-fuer-zuverlaessigere-verbindungen_aid-74781029)
 
 From DB data, 7% had to be removed to allow for analysis due to missing or inconsitent data. (Hauck et al.) They created a dataset which seems to be not published and never used in other papers.
+
+Train numbers: 
+- uneven number: travelling south/east
+- even number: travelling north/west
+- normally two consecutive numbers are pairs, i.e. they are travelling on the same line in opposite directions (the even number is the lower one of the pair)
+- Every train is travelling once per day (are there trains maybe only on specific days, e.g. weekends?)
+- 1800-1899: private/charted/relief trains
+- 1900-1999: refief trains
+- 2900-2999: replacement trains
+
+For IC (normally >2000) the system is less specified, but the above should hold. For ICE (normally <1800):
+- <500 should mostly be international trains, >500 national trains
+- The ten's digit is supposed to tell which cities a train passes, but this is highly inconsistent
