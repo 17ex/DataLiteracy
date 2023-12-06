@@ -41,7 +41,15 @@ Two different approches: train vs passenger oriented DM (König, 2020). DM norma
 
 Wären also durch das Warten eines Zuges mehr Reisende von Verspätungen betroffen und gibt es noch dazu gute Alternativverbindungen, weil der Bahnhof einen Knotenpunkt darstellt, wird der Anschlusszug nicht warten, um insgesamt möglichst wenig Verspätungen zuverursachen." (https://www.bahn.de/service/ueber-uns/inside-bahn/hintergrund-technik/anschlusszug-wartet-nicht)
 
-TODO look at the papers on more detail
+DB has a "traffic model" that can estimate how many passengers do a specific train transfer. (Liebchen et al., 2007)
+
+"The management of the region south-west (of Deutsche Bahn AG)
+decided to apply a strict no-wait policy from March 24 [2004] on."(Liebchen et al., 2007)
+
+DisKon model of the DB, could not find further information on the project and implementation by the DB.
+N. Bissantz, S. Guttler, J. Jacobs, S. Kurby, T. Schaer, A. Schöbel, and S. Scholl. DisKon - Disposition und Konfliktlösungsmanagement fur die beste Bahn. Eisenbahntechnische Rundschau (ETR), 45(12):809–821, 2005.
+
+Many (more or less complicated) DM models proposed and partly evaluated on DB data. However, I did not find a model evaluated on data comparable to ours. Often just very small subset of stations, they also need data that we do not have (i.e. traffic model, Liebchen et al. (2007))
 
 ## Other
 "Um die daraus resultierenden Verspätungen
