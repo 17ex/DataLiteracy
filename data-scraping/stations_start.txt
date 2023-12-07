@@ -1,0 +1,161 @@
+Aachen Hbf
+Altenbeken
+Andernach
+Angermünde
+Anklam
+Aschaffenburg Hbf
+Augsburg Hbf
+Baden-Baden
+Bad Hersfeld
+Bad Kleinen
+Bamberg
+Bensheim
+Berlin Gesundbrunnen
+Berlin Hbf
+Berlin Ostbahnhof
+Berlin-Spandau
+Berlin Südkreuz
+Berlin Wannsee
+Berlin Zoologischer Garten
+Bielefeld Hbf
+Bitterfeld
+Bochum Hbf
+Bonn Hbf
+Brandenburg Hbf
+Braunschweig Hbf
+Bremen Hbf
+Bruchsal
+Bützow
+Celle
+Coburg
+Darmstadt Hbf
+Delmenhorst
+Donauwörth
+Dortmund Hbf
+Dresden Hbf
+Dresden-Neustadt
+Duisburg Hbf
+Düren
+Düsseldorf Hbf
+Eberswalde Hbf
+Eisenach
+Erfurt Hbf
+Erlangen
+Essen Hbf
+Frankfurt am Main Flughafen Fernbahnhof
+Frankfurt(Main)Hbf
+Frankfurt(Main)Süd
+Frankfurt(Main)West
+Freiburg(Breisgau) Hbf
+Freilassing
+Friedberg(Hess)
+Fulda
+Gelsenkirchen Hbf
+Gießen
+Göppingen
+Gotha
+Göttingen
+Greifswald
+Günzburg
+Gütersloh Hbf
+Hagen Hbf
+Halle(Saale)Hbf
+Hamburg-Altona
+Hamburg Dammtor
+Hamburg Hbf
+Hamm(Westf)Hbf
+Hanau Hbf
+Hannover Hbf
+Hannover Messe/Laatzen
+Heidelberg Hbf
+Herford
+Hildesheim Hbf
+Homburg(Saar)Hbf
+Ingolstadt Hbf
+Jena Paradies
+Kaiserslautern Hbf
+Karlsruhe-Durlach
+Karlsruhe Hbf
+Kassel-Wilhelmshöhe
+Kiel Hbf
+Koblenz Hbf
+Köln/Bonn Flughafen
+Köln Hbf
+Köln Messe/Deutz
+Leipzig Hbf
+Lichtenfels
+Lippstadt
+Lübeck Hbf
+Ludwigsburg
+Ludwigslust
+Lüneburg
+Lutherstadt Wittenberg Hbf
+Magdeburg Hbf
+Mainz Hbf
+Mannheim Hbf
+Marburg(Lahn)
+Minden(Westf)
+Mönchengladbach Hbf
+Montabaur
+Mülheim(Ruhr)Hbf
+München Hbf
+München Ost
+München-Pasing
+Münster(Westf)Hbf
+Naumburg(Saale)Hbf
+Neumünster
+Neuss Hbf
+Neustadt(Weinstr)Hbf
+Neustrelitz Hbf
+Nienburg(Weser)
+Nürnberg Hbf
+Oberhausen Hbf
+Offenburg
+Osnabrück Hbf
+Paderborn Hbf
+Pasewalk
+Passau Hbf
+Pforzheim Hbf
+Plattling
+Plochingen
+Potsdam Hbf
+Prenzlau
+Recklinghausen Hbf
+Regensburg Hbf
+Ribnitz-Damgarten Ost
+Ribnitz-Damgarten West
+Riesa
+Rosenheim
+Rostock Hbf
+Saarbrücken Hbf
+Schwerin Hbf
+Siegburg/Bonn
+Soest
+Solingen Hbf
+Stadtallendorf
+Stendal Hbf
+Stralsund Hbf
+Stuttgart Hbf
+Traunstein
+Treuchtlingen
+Treysa
+Tutzing
+Uelzen
+Ulm Hbf
+Velgast
+Verden(Aller)
+Wabern(Bz Kassel)
+Wanne-Eickel Hbf
+Warburg(Westf)
+Weilheim(Oberbay)
+Weimar
+Weinheim(Bergstr)Hbf
+Weißenfels
+Wiesbaden Hbf
+Wiesloch-Walldorf
+Wittenberge
+Wolfsburg Hbf
+Worms Hbf
+Wuppertal Hbf
+Würzburg Hbf
+Züssow
