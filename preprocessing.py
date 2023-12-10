@@ -30,6 +30,27 @@ def str_to_time(s):
     return datetime.strptime(s, '%H:%M').time()
 
 
+def all_equal(lst):
+    return len(set(lst)) == 1
+
+
+def remove_unequal_delays(df):
+    return df[df['delay'].apply(all_equal)]
+
+
+def cancellation_to_int(s):
+    if pd.isna(s):
+        return 0
+    elif s == 'Ausfall (Startbahnhof)':
+        return 1
+    else:
+        return 0
+
+
+def cancellation_to_int_lst(l):
+    return [cancellation_to_int(c) for c in l]
+
+
 data_in = pd.read_csv("data/scraped_incoming_Frankfurt_Hbf.csv",
                       names=['origin', 'destination', 'date', 'departure',
                              'arrival', 'train', 'delay', 'cancellation'])
@@ -51,6 +72,19 @@ result_in = data_in.groupby(['train', 'date', 'arrival', 'destination'])[
 result_out = data_out.groupby(['train', 'date', 'departure', 'origin'])[
         ['destination', 'arrival', 'delay', 'cancellation']
         ].agg(list_agg).reset_index()
+
+# Remove entries from the df that don't have the same delay
+# for every incoming train per station, as there probably is
+# something wrong with the data point.
+in_clean_delays = remove_unequal_delays(result_in)
+out_clean_delays = remove_unequal_delays(result_out)
+
+# Collapse and/or clean up lists
+in_clean_delays.loc[:, 'delay'] = in_clean_delays.loc[:, 'delay'] \
+        .apply(lambda l: l[0])
+in_clean_delays.loc[:, 'cancellation'] = \
+        in_clean_delays.loc[:, 'cancellation'].apply(cancellation_to_int_lst)
+in_clean_delays = in_clean_delays.infer_objects()
 
 min_time_differences = result_in.groupby(['date', 'train']).apply(min_time_diff)
 print(min(min_time_differences))
