@@ -111,18 +111,30 @@ result_out.loc[:, 'cancellation'] = \
 in_clean = in_clean_delays.infer_objects()
 out_clean = result_out.infer_objects()
 
-min_time_differences = result_in.groupby(['date', 'train']).apply(min_time_diff)
+min_time_differences = in_clean.groupby(['date', 'train']).apply(min_time_diff)
 print(min(min_time_differences))
 
-merged = pd.merge(result_in, result_out, on=['date', 'train'])
-merged['arrival_x'] = pd.to_datetime(merged['arrival_x'],
-                                     format='%H:%M:%S', errors='coerce')
-merged['departure_y'] = pd.to_datetime(merged['departure_y'],
-                                       format='%H:%M:%S', errors='coerce')
+len_in = len(in_clean)
+len_out = len(out_clean)
+in_clean['in_id'] = range(0, len_in)
+out_clean['out_id'] = range(len_in, len_in + len_out)
+
+merged = pd.merge(in_clean, out_clean, on=['date', 'train'], how='outer',
+                  suffixes=['_in', '_out'])
+
+# TODO
+# The arrival station orders of out_clean are not sorted by time.
+# Maybe sort them by time, or at least ensure that it is still consistent.
 condition = (
-    (merged['arrival_x'] <= merged['departure_y']) &
-    (merged['arrival_x'] > merged['departure_y'] - timedelta(minutes=60))
-)
-result = merged[condition]
-print(result)
+        pd.isna(merged['arrival_in']) |
+        pd.isna(merged['departure_out']) |
+        ((merged['arrival_in'] <= merged['departure_out']) &
+         (merged['arrival_in'] > merged['departure_out'] - timedelta(minutes=60))
+         )
+        )
+merged = merged[condition]
+
+incoming = merged.loc[merged.loc[:, 'in_id'].notna()]
+
+# print(result)
 # result.to_csv('result.csv', index=False)
