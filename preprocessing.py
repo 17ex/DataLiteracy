@@ -80,6 +80,13 @@ def cancellation_to_int_lst(l):
     return [cancellation_to_int(c) for c in l]
 
 
+def d_id_to_int(d):
+    if pd.isna(d):
+        return -1
+    else:
+        return int(d)
+
+
 data_in = pd.read_csv("data/scraped_incoming_Frankfurt_Hbf.csv",
                       names=['origin', 'destination', 'date', 'departure',
                              'arrival', 'train', 'delay', 'cancellation'])
@@ -136,7 +143,33 @@ condition = (
         )
 merged = merged[condition]
 
+# TODO
+# Somehow ~5000 incoming trains and ~1800 outgoing trains are missing after this.
+# What happened to them?
 incoming = merged.loc[merged.loc[:, 'in_id'].notna()]
+outgoing = merged.loc[merged.loc[:, 'out_id'].notna()]
+incoming = incoming.loc[:, ['in_id', 'train', 'date', 'arrival_in',
+                            'destination_in', 'origin_in', 'departure_in',
+                            'delay_in', 'cancellation_in', 'out_id']]
+outgoing = outgoing.loc[:, ['out_id', 'train', 'date', 'arrival_out',
+                            'destination_out', 'origin_out', 'departure_out',
+                            'delay_out', 'cancellation_out', 'in_id']]
+incoming = incoming.rename(columns={'arrival_in': 'arrival',
+                                    'destination_in': 'destination',
+                                    'origin_in': 'origin',
+                                    'departure_in': 'departure',
+                                    'delay_in': 'delay',
+                                    'cancellation_in': 'cancellation'})
+outgoing = outgoing.rename(columns={'arrival_out': 'arrival',
+                                    'destination_out': 'destination',
+                                    'origin_out': 'origin',
+                                    'departure_out': 'departure',
+                                    'delay_out': 'delay',
+                                    'cancellation_out': 'cancellation'})
+incoming['out_id'] = incoming.loc[:, 'out_id'].apply(d_id_to_int).astype(int)
+incoming['in_id'] = incoming.loc[:, 'in_id'].apply(d_id_to_int).astype(int)
+outgoing['out_id'] = outgoing.loc[:, 'out_id'].apply(d_id_to_int).astype(int)
+outgoing['in_id'] = outgoing.loc[:, 'in_id'].apply(d_id_to_int).astype(int)
 
-# print(result)
-# result.to_csv('result.csv', index=False)
+incoming.to_pickle("data/incoming.pkl")
+outgoing.to_pickle("data/outgoing.pkl")
