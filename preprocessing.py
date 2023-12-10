@@ -26,8 +26,35 @@ def str_to_date(s):
     return datetime.strptime(s, '%d.%m.%Y').date()
 
 
-def str_to_time(s):
-    return datetime.strptime(s, '%H:%M').time()
+def strs_to_datetime_departure(sdate, stime):
+    return datetime.strptime(sdate + '-' + stime, '%d.%m.%Y-%H:%M')
+
+
+# Assuming that the date is the date of departure, not the date of arrival
+def strs_to_datetime_arrival(sdate, stime, time_departure):
+    time_arrival = datetime.strptime(sdate + '-' + stime, '%d.%m.%Y-%H:%M')
+    if time_arrival < time_departure:
+        return time_arrival + timedelta(days=1)
+    else:
+        return time_arrival
+
+
+def format_datetimes(df):
+    df.loc[:, 'departure'] = \
+            df.loc[:, ['date', 'departure']].apply(
+                    lambda c: strs_to_datetime_departure(
+                        c['date'],
+                        c['departure']),
+                    axis=1)
+    df.loc[:, 'arrival'] = \
+            df.loc[:, ['date', 'arrival', 'departure']].apply(
+                    lambda c: strs_to_datetime_arrival(
+                        c['date'],
+                        c['arrival'],
+                        c['departure']),
+                    axis=1)
+    # date is redundant, but helpful for grouping.
+    df.loc[:, 'date'] = df.loc[:, 'date'].apply(str_to_date)
 
 
 def all_equal(lst):
@@ -58,12 +85,8 @@ data_out = pd.read_csv("data/scraped_outgoing_Frankfurt_Hbf.csv",
                        names=['origin', 'destination', 'date', 'departure',
                               'arrival', 'train', 'delay', 'cancellation'])
 
-data_in['date'] = data_in['date'].apply(str_to_date)
-data_in['departure'] = data_in['departure'].apply(str_to_time)
-data_in['arrival'] = data_in['arrival'].apply(str_to_time)
-data_out['date'] = data_out['date'].apply(str_to_date)
-data_out['departure'] = data_out['departure'].apply(str_to_time)
-data_out['arrival'] = data_out['arrival'].apply(str_to_time)
+format_datetimes(data_in)
+format_datetimes(data_out)
 
 # Use groupby with agg to apply custom aggregation function
 result_in = data_in.groupby(['train', 'date', 'arrival', 'destination'])[
