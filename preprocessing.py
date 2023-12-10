@@ -53,8 +53,10 @@ def format_datetimes(df):
                         c['arrival'],
                         c['departure']),
                     axis=1)
-    # date is redundant, but helpful for grouping.
-    df.loc[:, 'date'] = df.loc[:, 'date'].apply(str_to_date)
+    # We use the date of a train as the date of departure.
+    # If the train arrives a day later, it still has the date of departure
+    # associated with it.
+    df.loc[:, 'date'] = df.loc[:, 'departure'].apply(lambda d: d.date())
 
 
 def all_equal(lst):
