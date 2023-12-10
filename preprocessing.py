@@ -100,14 +100,16 @@ result_out = data_out.groupby(['train', 'date', 'departure', 'origin'])[
 # for every incoming train per station, as there probably is
 # something wrong with the data point.
 in_clean_delays = remove_unequal_delays(result_in)
-out_clean_delays = remove_unequal_delays(result_out)
 
 # Collapse and/or clean up lists
 in_clean_delays.loc[:, 'delay'] = in_clean_delays.loc[:, 'delay'] \
         .apply(lambda l: l[0])
 in_clean_delays.loc[:, 'cancellation'] = \
         in_clean_delays.loc[:, 'cancellation'].apply(cancellation_to_int_lst)
-in_clean_delays = in_clean_delays.infer_objects()
+result_out.loc[:, 'cancellation'] = \
+        result_out.loc[:, 'cancellation'].apply(cancellation_to_int_lst)
+in_clean = in_clean_delays.infer_objects()
+out_clean = result_out.infer_objects()
 
 min_time_differences = result_in.groupby(['date', 'train']).apply(min_time_diff)
 print(min(min_time_differences))
