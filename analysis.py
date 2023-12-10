@@ -28,11 +28,12 @@ for date in set(unique_dates_in) & set(unique_dates_out):
             if row_in.arrival <= row_out.departure or row_in.in_id == row_out.out_id:
                 break
             else:
+                # TODO: add logic for cancelled trains
                 plan_difference = (row_in.arrival - row_out.departure).total_seconds() / 60
                 delay_difference = row_in.delay - row_out.delay[0]
                 if plan_difference not in reachable_count:
                     reachable_count[plan_difference] = {'reachable': 0, 'not_reachable': 0}
-                if plan_difference <= delay_difference:
+                if plan_difference <= delay_difference or row_in.cancellation[-1] != 0 or row_out.cancellation[0] != 0:
                     reachable_count[plan_difference]['not_reachable'] += 1
                 else:
                     reachable_count[plan_difference]['reachable'] += 1
