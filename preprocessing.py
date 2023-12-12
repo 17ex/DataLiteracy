@@ -12,6 +12,10 @@ def min_time_diff(group):
             time_diff = abs((datetime.combine(datetime.today(), times[j]) -
                              datetime.combine(datetime.today(),
                                               times[i])).total_seconds())
+            # If there is a problem with the datetime try this instead. Maybe jsut delete above?
+            # time_diff = abs((datetime.combine(datetime.today(), times[j].to_pydatetime().time()) -
+            #                 datetime.combine(datetime.today(),
+            #                                  times[i].to_pydatetime().time())).total_seconds())
             if min_diff > time_diff:
                 min_diff = time_diff
     return min_diff
