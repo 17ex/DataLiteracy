@@ -4,6 +4,7 @@ import pickle
 import matplotlib.pyplot as plt
 from datetime import date
 
+# Load data
 with open('data/incoming.pkl', 'rb') as file:
     incoming = pickle.load(file)
 
@@ -12,21 +13,18 @@ with open('data/outgoing.pkl', 'rb') as file:
 
 pd.set_option('display.max_columns', None)
 
+# TODO Ignore cancelled trains' delays.
 # Some very basic plots (daily/monthly delay percentages, delays after number of stops)
-# TODO clean this
 
-def daily_monthly():
-    late = 0
-    punctual = 0
+def get_daily_delay_percentage(replace_missing_data=np.nan, use_outgoing=True):
     percentages = []
     dates = []
-    no_data = []
-    #outgoing_nov23 = outgoing[(outgoing["date"] >= date(2023, 11, 1)) & (outgoing["date"] < date(2023, 12, 1))]
+    no_data_dates = []
     for year in [2021, 2022, 2023]:
         for month in range(1, 13):
             if month == 2:
                 days = 28
-            elif month == 1 | month == 3 | month == 5 | month == 7 | month == 8 | month == 10 | month == 12:
+            elif month == 1 or month == 3 or month == 5 or month == 7 or month == 8 or month == 10 or month == 12:
                 days = 31
             else:
                 days = 30
@@ -38,76 +36,141 @@ def daily_monthly():
                 else:
                     next_date = date(year+1, 1, 1)
                 next_date = date(year, month, day+1) if day < days else date(year+1, 1, 1)
-                data = outgoing[(outgoing["date"] >= date(year, month, 1)) & (outgoing["date"] < next_date)]
-                if year == 2023 and month == 7:
-                    print("here")
-                    print(data)
-                    print("here")
+                if use_outgoing:
+                    data = outgoing[(outgoing["date"] >= date(year, month, 1)) & (outgoing["date"] < next_date)]
+                else:
+                    data = incoming[(incoming["date"] >= date(year, month, 1)) & (incoming["date"] < next_date)]
                 late = 0
                 punctual = 0
                 for delays in data["delay"]:
-                    """if delays >= 6:
-                        late += 1
+                    if use_outgoing:
+                        for entry in delays:
+                            if entry >= 6:
+                                late += 1
+                            else:
+                                punctual += 1
                     else:
-                        punctual += 1"""
-                    for entry in delays:
-                        if entry >= 6:
+                        if delays >= 6:
                             late += 1
                         else:
                             punctual += 1
                 dates.append(date(year, month, day))
                 if late + punctual == 0:
-                    no_data.append(date(year, month, day))
-                    percentages.append(0)
-                else:
-                    
+                    no_data_dates.append(date(year, month, day))
+                    percentages.append(replace_missing_data)
+                else:  
                     percentages.append(punctual / (late + punctual))
-    print(no_data)
+    if len(no_data_dates) > 0:
+        print("No data on these days:")
+        print(no_data_dates)
+    return percentages, dates, no_data_dates
+
+
+def get_monthly_delay_percentage(replace_missing_data=np.nan, use_outgoing=True):
+    percentages = []
+    dates = []
+    no_data_dates = []
+    for year in [2021, 2022, 2023]:
+        for month in range(1, 13):
+            if month < 12:
+                next_date = date(year, month+1, 1)
+            else:
+                next_date = date(year+1, 1, 1)
+            if use_outgoing:
+                data = outgoing[(outgoing["date"] >= date(year, month, 1)) & (outgoing["date"] < next_date)]
+            else:
+                data = incoming[(incoming["date"] >= date(year, month, 1)) & (incoming["date"] < next_date)]
+            late = 0
+            punctual = 0
+            for delays in data["delay"]:
+                if use_outgoing:
+                    for entry in delays:
+                        if entry >= 6:
+                            late += 1
+                        else:
+                            punctual += 1
+                else:
+                    if delays >= 6:
+                        late += 1
+                    else:
+                        punctual += 1
+            dates.append(date(year, month, 1))
+            if late + punctual == 0:
+                no_data_dates.append(date(year, month, 1))
+                percentages.append(replace_missing_data)
+            else:  
+                percentages.append(punctual / (late + punctual))
+    if len(no_data_dates) > 0:
+        print("No data on these months:")
+        print(no_data_dates)
+    return percentages, dates
+
+
+def plot(dates, percentages):
     plt.plot(dates, percentages, color='blue')
     plt.xlabel('Date')
     plt.ylabel('Percentage of punctual trains')
-    plt.title('Monthly Percentage of Punctual Trains (delay <= 5)')
-    plt.xticks(rotation=45, ha='right')
+    if len(percentages) > 50:
+        plt.title('Daily Percentage of Punctual Trains (delay <= 5)')
+    else:
+        plt.title('Monthly Percentage of Punctual Trains (delay <= 5)')
     plt.tight_layout()
     plt.show()
 
-#daily_monthly()
+#percentages1, dates, no_data_dates = get_daily_delay_percentage(replace_missing_data=np.nan, use_outgoing=False)
+#percentages2, dates, no_data_dates = get_daily_delay_percentage(replace_missing_data=np.nan, use_outgoing=True)
+#percentages = np.array(percentages1) - np.array(percentages2)
+#plot(dates, percentages)
 
-fra_delay = np.mean(incoming["delay"])
 
-delay_arr = np.empty((len(outgoing["delay"]), 23))
-delay_arr[:] = np.nan
-d = 0
+def get_delay_array():
 
-for delays in outgoing["delay"]:
-    for i in range(len(delays)):
-        if i < 23:
-            delay_arr[d, i] = delays[i]
-    d += 1
+    delay_array = np.empty((len(outgoing["delay"]), 23))
+    delay_array[:] = np.nan
 
-print(delay_arr)
+    d = 0
+    for delays in outgoing["delay"]:
+        for i in range(len(delays)):
+            if i < 23:
+                delay_array[d, i] = delays[i]
+        d += 1
+    return delay_array    
 
-labels = ["Frankfurt", "+1 stop", "+2 stops", "+3 stops", "+4 stops", "+5 stops", "+6 stops"]
-labels = np.arange(23)
-means = np.nanmean(delay_arr, axis=0)
-stds = 0.0*np.nanstd(delay_arr, axis=0)
+def plot_stop_statistics(delay_array, lower_percentile=25, upper_percentile=75):
+    labels = np.arange(24)
+    means = np.zeros(24)
+    stds = np.zeros(24)
+    medians = np.zeros(24)
+    percentile_lower = np.zeros(24)
+    percentile_upper = np.zeros(24)
 
-"""plt.bar(labels, means, yerr=stds)
-plt.ylabel('Mean Delay in min')
-plt.title('Mean Delay at Stops starting at Frankfurt')
-plt.tight_layout()
-plt.show()"""
+    means[0] = np.mean(incoming["delay"])
+    means[1:] = np.nanmean(delay_array, axis=0)
 
-medians = np.nanmedian(delay_arr, axis=0)
-percentile_25 = np.nanpercentile(delay_arr, 25, axis=0)
-percentile_75 = np.nanpercentile(delay_arr, 75, axis=0)
+    stds[0] = 0.1 * np.std(incoming["delay"])
+    stds[1:] = 0.1 * np.nanstd(delay_array, axis=0)
 
-plt.figure()
-plt.errorbar(labels, medians, yerr=[medians-percentile_25, percentile_75-medians], fmt='o', label='Median and 25-75% quantiles')
-plt.errorbar(labels, means, yerr=stds, fmt='o', label='Mean')
-plt.legend()
-plt.ylabel('Mean Delay in min')
-plt.title('Mean Delay at Stops starting at Frankfurt')
-plt.tight_layout()
+    medians[0] = np.median(incoming["delay"])
+    medians[1:] = np.nanmedian(delay_array, axis=0)
 
-plt.show()
+    percentile_lower[0] = np.percentile(incoming["delay"], lower_percentile)
+    percentile_lower[1:] = np.nanpercentile(delay_array, lower_percentile, axis=0)
+
+    percentile_upper[0] = np.percentile(incoming["delay"], upper_percentile)
+    percentile_upper[1:] = np.nanpercentile(delay_array, upper_percentile, axis=0)
+
+
+    plt.figure()
+    plt.errorbar(labels, medians, yerr=[medians-percentile_lower, percentile_upper-medians], fmt='o', label=f'Median and {lower_percentile}-{upper_percentile}% quantiles')
+    plt.errorbar(labels, means, yerr=stds, fmt='o', label='Mean')
+    plt.legend()
+    plt.ylabel('Mean Delay in min')
+    plt.title('Mean Delay at Stops starting at Frankfurt')
+    plt.tight_layout()
+    plt.show()
+
+plot_stop_statistics(get_delay_array())
+
+
+
+
