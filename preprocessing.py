@@ -6,18 +6,10 @@ from datetime import datetime
 def min_time_diff(group):
     min_diff = float('inf')  # Set an initial maximum value for minimum difference
     times = group['arrival'].tolist()
-
-    for i in range(len(times)):
+    for i, time_i in enumerate(times):
         for j in range(i + 1, len(times)):
-            time_diff = abs((datetime.combine(datetime.today(), times[j]) -
-                             datetime.combine(datetime.today(),
-                                              times[i])).total_seconds())
-            # If there is a problem with the datetime try this instead. Maybe jsut delete above?
-            # time_diff = abs((datetime.combine(datetime.today(), times[j].to_pydatetime().time()) -
-            #                 datetime.combine(datetime.today(),
-            #                                  times[i].to_pydatetime().time())).total_seconds())
-            if min_diff > time_diff:
-                min_diff = time_diff
+            time_diff = abs((times[j] - time_i).total_seconds())
+            min_diff = min(min_diff, time_diff)
     return min_diff
 
 
@@ -124,8 +116,8 @@ result_out.loc[:, 'cancellation'] = \
 in_clean = in_clean_delays.infer_objects()
 out_clean = result_out.infer_objects()
 
-min_time_differences = in_clean.groupby(['date', 'train']).apply(min_time_diff)
-print(min(min_time_differences))
+# min_time_differences = in_clean.groupby(['date', 'train']).apply(min_time_diff)
+# print(min(min_time_differences))
 
 len_in = len(in_clean)
 len_out = len(out_clean)
