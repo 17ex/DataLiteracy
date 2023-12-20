@@ -1,7 +1,6 @@
 import pandas as pd
 import json
 import pickle
-import time
 
 
 def bootstrap(data, num_samples):
@@ -33,7 +32,6 @@ def find_biggest_gain_per_next_stop(incoming, outgoing):
         departure_delay = max(0, delay_in - wait_time)
         gain = departure_delay - delay_out
         if gain > 0.1 * driving_time:
-            # print(gain, destination, ' driving time ', driving_time, ' wait ', wait_time, ' delay_Fra ', delay_in, ' delay_after_Fra ', row.delay_y)
             delays = row.delay_y
             delay_out = -1
             for j in range(len(delays)):
@@ -65,39 +63,39 @@ def find_biggest_gain_per_next_stop(incoming, outgoing):
 
 
 def reachable_transfers(incoming, outgoing, gains={}, estimated_gain=0.0, worst_case=False):
-    # Get unique dates from both DataFrames
-    unique_dates_in = incoming['date'].unique()
-    unique_dates_out = outgoing['date'].unique()
+    filtered = pd.merge(incoming, outgoing, on='date')
+    filtered = filtered[(filtered['arrival_x'] < filtered['departure_y']) & (filtered['in_id_x'] != filtered['in_id_y'])]
     reachable_count = {}
-    # Iterate over common dates in both DataFrames
-    for date in set(unique_dates_in) & set(unique_dates_out):
-        group_in = incoming[incoming['date'] == date]
-        group_out = outgoing[outgoing['date'] == date]
-        for row_in in group_in.itertuples():
-            for row_out in group_out.itertuples():
-                if row_in.arrival <= row_out.departure or row_in.in_id == row_out.in_id:
-                    break
-                else:
-                    plan_difference = (row_in.arrival - row_out.departure).total_seconds() / 60
-                    if worst_case:
-                        delay_difference = row_in.delay
-                    elif gains:
-                        if row_out.destination[0] not in gains.keys():
-                            gain = 0
-                        else:
-                            gain = gains[row_out.destination[0]]
-                        out_delay = max(0, row_out.delay[0] + gain)
-                        delay_difference = max(0, row_in.delay - out_delay)
-                    else:
-                        estimated_gain = estimated_gain * (row_out.arrival[0] - row_out.departure).total_seconds() / 60
-                        delay_difference = max(0, row_in.delay - row_out.delay[0] - estimated_gain)
-                    if plan_difference not in reachable_count:
-                        reachable_count[plan_difference] = {'reachable': 0, 'not_reachable': 0}
-                    if plan_difference <= delay_difference or row_in.cancellation[-1] != 0 or row_out.cancellation[
-                        0] != 0:
-                        reachable_count[plan_difference]['not_reachable'] += 1
-                    else:
-                        reachable_count[plan_difference]['reachable'] += 1
+    for train in filtered.itertuples():
+        arrival_FRA = train.arrival_x
+        departure_FRA = train.departure_y
+        in_delay = train.delay_x
+        dest_delay = train.delay_y[0]
+        dest_arrival = train.arrival_y[0]
+        destination = train.destination_y[0]
+        cancellation_in = train.cancellation_x
+        cancellation_out = train.cancellation_y
+        plan_difference = (departure_FRA - arrival_FRA).total_seconds() / 60
+        if worst_case:
+            delay_difference = in_delay
+        elif gains:
+            if destination not in gains.keys():
+                gain = 0
+            else:
+                gain = gains[destination]
+            out_delay = max(0, dest_delay + gain)
+            delay_difference = max(0, in_delay - out_delay)
+        else:
+            estimated_gain * (dest_arrival - departure_FRA).total_seconds() / 60
+            out_delay = max(0, dest_delay + estimated_gain)
+            delay_difference = max(0, in_delay - out_delay)
+
+        if plan_difference not in reachable_count:
+            reachable_count[plan_difference] = {'reachable': 0, 'not_reachable': 0}
+        if plan_difference <= delay_difference or cancellation_in[-1] != 0 or cancellation_out[0] != 0:
+            reachable_count[plan_difference]['not_reachable'] += 1
+        else:
+            reachable_count[plan_difference]['reachable'] += 1
     return reachable_count
 
 with open('data/incoming.pkl', 'rb') as file:
@@ -106,7 +104,7 @@ with open('data/incoming.pkl', 'rb') as file:
 with open('data/outgoing.pkl', 'rb') as file:
     outgoing = pickle.load(file)
 
-num_bootstrap_samples = 50  # Number of bootstrap samples
+num_bootstrap_samples = 0  # Number of bootstrap samples
 incoming_bootstrapped = bootstrap(incoming, num_bootstrap_samples)
 outgoing_bootstrapped = bootstrap(outgoing, num_bootstrap_samples)
 
