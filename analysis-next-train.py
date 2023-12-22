@@ -175,6 +175,7 @@ def find_next_train(train, all_trains, gains={}, estimated_gain=0.0, worst_case=
         cancellation_in = next_train.cancellation_x
         cancellation_out = next_train.cancellation_y
         plan_difference, delay_difference = reachable_train(next_train, gains, estimated_gain, worst_case)
+        # TODO: deal with cancellations in a better way
         if plan_difference <= delay_difference or cancellation_in[-1] != 0 or cancellation_out[0] != 0:
             filtered_next = filtered_next.drop(next_train_idx)
         else:
@@ -260,6 +261,7 @@ def reachable_transfers(incoming, outgoing, gains={}, estimated_gain=0.0, worst_
                 reachable_count[plan_difference] = {'reachable': 0, 'not_reachable': 0}
                 delay[plan_difference] = (0, 0)
 
+            # TODO: Deal with cancellations
             if plan_difference <= delay_difference:
                 reachable_count[plan_difference]['not_reachable'] += 1
                 next_train, wait_delay = find_next_train(train, group_id, gains, estimated_gain, worst_case)
@@ -270,6 +272,7 @@ def reachable_transfers(incoming, outgoing, gains={}, estimated_gain=0.0, worst_
                     delay[plan_difference] = (t + 1, (t * v + np.mean(next_train.delay_y) + wait_delay) / (t + 1))
                     found_train += 1
                 else:
+                    # TODO: How to deal with this (luckily doesn't happen super often)
                     no_next_train += 1
             else:
                 reachable_count[plan_difference]['reachable'] += 1
