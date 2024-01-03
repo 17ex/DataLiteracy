@@ -83,6 +83,76 @@ def d_id_to_int(d):
         return int(d)
 
 
+def add_directions(train_data, is_incoming):
+
+    direction_list = [""] * len(train_data)
+    directions = {'South': ['Weinheim(Bergstr)Hbf', 'Bruchsal', 'Karlsruhe-Durlach', 'Günzburg', 'Bensheim', 'Mannheim Hbf', 'Stuttgart Hbf', 'Karlsruhe Hbf', 'Kaiserslautern Hbf', 'Saarbrücken Hbf',
+                        'Baden-Baden', 'Ulm Hbf', 'Heidelberg Hbf', 'Darmstadt Hbf', 'Wiesloch-Walldorf', 'Offenburg', 'Freiburg(Breisgau) Hbf'],
+              'West': ['Hamm(Westf)Hbf', 'Aachen Hbf', 'Mönchengladbach Hbf', 'Siegburg/Bonn', 'Hagen Hbf', 'Duisburg Hbf', 'Recklinghausen Hbf', 'Andernach', 'Köln/Bonn Flughafen', 'Solingen Hbf', 'Oberhausen Hbf', 'Montabaur', 'Münster(Westf)Hbf', 'Bochum Hbf', 'Wuppertal Hbf', 'Köln Hbf', 'Mainz Hbf', 'Frankfurt(Main)West',
+                       'Dortmund Hbf', 'Koblenz Hbf', 'Bonn Hbf', 'Köln Messe/Deutz', 'Düsseldorf Hbf', 'Wiesbaden Hbf', 'Gelsenkirchen Hbf', 'Essen Hbf'],
+              'North': ['Kassel-Wilhelmshöhe', 'Lüneburg', 'Göttingen', 'Hannover Messe/Laatzen', 'Uelzen', 'Hannover Hbf', 'Celle', 'Hamburg Dammtor', 'Neumünster', 'Treysa', 'Marburg(Lahn)', 'Gießen', 'Friedberg(Hess)', 'Hamburg Hbf', 'Bremen Hbf', 'Hamburg-Altona', 'Kiel Hbf'],
+              'North East': ['Weißenfels', 'Wittenberge', 'Naumburg(Saale)Hbf', 'Stendal Hbf', 'Halle(Saale)Hbf', 'Bitterfeld', 'Berlin Ostbahnhof','Berlin Südkreuz', 'Dresden-Neustadt', 'Wolfsburg Hbf', 'Eisenach', 'Dresden Hbf', 'Berlin-Spandau', 'Lutherstadt Wittenberg Hbf', 'Riesa', 'Hildesheim Hbf', 'Berlin Hbf', 'Braunschweig Hbf', 'Erfurt Hbf', 'Leipzig Hbf',
+                             'Brandenburg Hbf', 'Magdeburg Hbf', 'Berlin Gesundbrunnen'],
+              'East': ['München-Pasing', 'München Hbf', 'Augsburg Hbf', 'Plattling', 'Aschaffenburg Hbf', 'Passau Hbf', 'Nürnberg Hbf', 'Würzburg Hbf', 'Regensburg Hbf', 'Ingolstadt Hbf']}
+    not_found = 0
+    found = 0
+    airport = 0
+    index = 0
+    
+
+    for train_out in train_data.itertuples():
+        found_direction = False
+        
+        if is_incoming:
+            stops = train_out.origin
+            stops.reverse()
+        else:
+            stops = train_out.destination
+        for dest in stops:
+            if dest in directions['South']:
+                found += 1
+                found_direction = True
+                direction_list[index] = 'South'
+                break
+            elif dest in directions['West']:
+                found += 1
+                found_direction = True
+                direction_list[index] = 'West'
+                break
+            elif dest in directions['North']:
+                found += 1
+                found_direction = True
+                direction_list[index] = 'North'
+                break
+            elif dest in directions['North East']:
+                found += 1
+                found_direction = True
+                direction_list[index] = 'North East'
+                break
+            elif dest in directions['East']:
+                found += 1
+                found_direction = True
+                direction_list[index] = 'East'
+                break
+        if not found_direction:
+            not_found += 1
+            direction_list[index] = 'None'
+            for dest in train_out.destination:
+                if dest in ['Frankfurt am Main Flughafen Fernbahnhof']:
+                    airport += 1
+                    break
+        index += 1
+
+    train_data['direction'] = direction_list
+
+    print(f"Set directions of {found} trains.")
+    print(f"Did not find clear direction of {not_found} trains.")
+    if is_incoming:
+        print(f"Out of those, {airport} trains start at Frankfurt airport without other stops.")
+    else:
+        print(f"Out of those, {airport} trains end at Frankfurt airport without other stops.")
+    return train_data
+
 data_in = pd.read_csv("data/scraped_incoming_Frankfurt_Hbf.csv",
                       names=['origin', 'destination', 'date', 'departure',
                              'arrival', 'train', 'delay', 'cancellation'])
@@ -90,8 +160,15 @@ data_out = pd.read_csv("data/scraped_outgoing_Frankfurt_Hbf.csv",
                        names=['origin', 'destination', 'date', 'departure',
                               'arrival', 'train', 'delay', 'cancellation'])
 
+#add_directions(data_out)                              
+
 format_datetimes(data_in)
 format_datetimes(data_out)
+
+
+
+data_in = data_in.sort_values(["date", "departure"])
+data_out = data_out.sort_values(["date", "arrival"])
 
 # Use groupby with agg to apply custom aggregation function
 result_in = data_in.groupby(['train', 'date', 'arrival', 'destination'])[
@@ -166,6 +243,10 @@ incoming['out_id'] = incoming.loc[:, 'out_id'].apply(d_id_to_int).astype(int)
 incoming['in_id'] = incoming.loc[:, 'in_id'].apply(d_id_to_int).astype(int)
 outgoing['out_id'] = outgoing.loc[:, 'out_id'].apply(d_id_to_int).astype(int)
 outgoing['in_id'] = outgoing.loc[:, 'in_id'].apply(d_id_to_int).astype(int)
+
+print(incoming['origin'])
+incoming = add_directions(incoming, True)
+outgoing = add_directions(outgoing, False)
 
 incoming.to_pickle("data/incoming.pkl")
 outgoing.to_pickle("data/outgoing.pkl")

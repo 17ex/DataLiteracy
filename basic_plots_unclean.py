@@ -3,6 +3,7 @@ import numpy as np
 import pickle
 import matplotlib.pyplot as plt
 from datetime import date
+from tueplots.constants.color import rgb
 
 # Load data
 with open('data/incoming.pkl', 'rb') as file:
@@ -138,6 +139,7 @@ def get_delay_array():
 
 def plot_stop_statistics(delay_array, lower_percentile=25, upper_percentile=75):
     labels = np.arange(24)
+    labels = ["Fr", "+1", "+2", "+3", "+4", "+5", "+6", "+7", "+8", "+9", "+10", "+11", "+12", "+13", "+14", "+15", "+16", "+17", "+18", "+19", "+20", "+21", "+22", "+23"]
     means = np.zeros(24)
     stds = np.zeros(24)
     medians = np.zeros(24)
@@ -147,8 +149,8 @@ def plot_stop_statistics(delay_array, lower_percentile=25, upper_percentile=75):
     means[0] = np.mean(incoming["delay"])
     means[1:] = np.nanmean(delay_array, axis=0)
 
-    stds[0] = 0.1 * np.std(incoming["delay"])
-    stds[1:] = 0.1 * np.nanstd(delay_array, axis=0)
+    stds[0] = 0.0 * np.std(incoming["delay"])
+    stds[1:] = 0.0 * np.nanstd(delay_array, axis=0)
 
     medians[0] = np.median(incoming["delay"])
     medians[1:] = np.nanmedian(delay_array, axis=0)
@@ -161,9 +163,10 @@ def plot_stop_statistics(delay_array, lower_percentile=25, upper_percentile=75):
 
 
     plt.figure()
-    plt.errorbar(labels, medians, yerr=[medians-percentile_lower, percentile_upper-medians], fmt='o', label=f'Median and {lower_percentile}-{upper_percentile}% quantiles')
-    plt.errorbar(labels, means, yerr=stds, fmt='o', label='Mean')
+    plt.errorbar(labels, medians, yerr=[medians-percentile_lower, percentile_upper-medians], fmt='o', label=f'Median and {lower_percentile}-{upper_percentile}% quantiles', color=rgb.tue_red)
+    plt.errorbar(labels, means, yerr=stds, fmt='o', label='Mean', color=rgb.tue_blue)
     plt.legend()
+    plt.xlabel('Stops')
     plt.ylabel('Mean Delay in min')
     plt.title('Mean Delay at Stops starting at Frankfurt')
     plt.tight_layout()

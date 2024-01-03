@@ -3,3 +3,5 @@
 data/
 venv/
 *.ipynb
+net_directions.xcf
+__pycache__
