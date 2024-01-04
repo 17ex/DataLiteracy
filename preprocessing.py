@@ -1,6 +1,7 @@
 import pandas as pd
 from datetime import timedelta
 from datetime import datetime
+import numpy as np
 
 
 def min_time_diff(group):
@@ -98,7 +99,7 @@ def add_directions(train_data, is_incoming):
     found = 0
     airport = 0
     index = 0
-    
+    remove_impossible_indices = -1
 
     for train_out in train_data.itertuples():
         found_direction = False
@@ -108,6 +109,11 @@ def add_directions(train_data, is_incoming):
             stops.reverse()
         else:
             stops = train_out.destination
+
+        # TODO check for impossible schedules in general? How?
+        if 'Stuttgart Hbf' in stops and 'Berlin Hbf' in stops:
+            remove_impossible_indices = index
+        
         for dest in stops:
             if dest in directions['South']:
                 found += 1
@@ -151,6 +157,8 @@ def add_directions(train_data, is_incoming):
         print(f"Out of those, {airport} trains start at Frankfurt airport without other stops.")
     else:
         print(f"Out of those, {airport} trains end at Frankfurt airport without other stops.")
+    if remove_impossible_indices >= 0:
+        train_data = train_data[train_data.index != remove_impossible_indices]
     return train_data
 
 data_in = pd.read_csv("data/scraped_incoming_Frankfurt_Hbf.csv",
@@ -204,9 +212,7 @@ out_clean['out_id'] = range(len_in, len_in + len_out)
 merged = pd.merge(in_clean, out_clean, on=['date', 'train'], how='outer',
                   suffixes=['_in', '_out'])
 
-# TODO
-# The arrival station orders of out_clean are not sorted by time.
-# Maybe sort them by time, or at least ensure that it is still consistent.
+
 condition = (
         pd.isna(merged['arrival_in']) |
         pd.isna(merged['departure_out']) |
@@ -244,9 +250,8 @@ incoming['in_id'] = incoming.loc[:, 'in_id'].apply(d_id_to_int).astype(int)
 outgoing['out_id'] = outgoing.loc[:, 'out_id'].apply(d_id_to_int).astype(int)
 outgoing['in_id'] = outgoing.loc[:, 'in_id'].apply(d_id_to_int).astype(int)
 
-print(incoming['origin'])
 incoming = add_directions(incoming, True)
 outgoing = add_directions(outgoing, False)
 
-incoming.to_pickle("data/incoming.pkl")
-outgoing.to_pickle("data/outgoing.pkl")
+#incoming.to_pickle("data/incoming.pkl")
+#outgoing.to_pickle("data/outgoing.pkl")
