@@ -149,7 +149,7 @@ def find_biggest_gain_per_next_stop(incoming, outgoing):
     return gains, average_gain
 
 
-def find_next_train(train, all_trains, gains={}, estimated_gain=0.0, worst_case=False):
+def find_next_train_out(train, all_trains, gains={}, estimated_gain=0.0, worst_case=False):
     """
     Finds the next train based on certain criteria.
 
@@ -180,6 +180,42 @@ def find_next_train(train, all_trains, gains={}, estimated_gain=0.0, worst_case=
             filtered_next = filtered_next.drop(next_train_idx)
         else:
             return next_train, (next_train.departure_y - plan_departure).total_seconds() / 60
+
+    return None, 0
+
+
+def find_next_train_in(train, all_trains, gains={}, estimated_gain=0.0, worst_case=False):
+    """
+    Finds the next train based on certain criteria.
+
+    Args:
+    - train (DataFrame): DataFrame containing information about the current train.
+    - all_trains (DataFrame): DataFrame containing information about all trains.
+    - gains (dict, optional): Dictionary containing gains. Default is an empty dictionary.
+    - estimated_gain (float, optional): Estimated gain. Default is 0.0.
+    - worst_case (bool, optional): Flag for worst-case scenario. Default is False.
+
+    Returns:
+    - next_train (Next Train in the Dataframe or None): The next train information, if found; otherwise, None.
+    - time_difference (float): Time difference in minutes between the next train's departure and the current train's plan_departure.
+    """
+
+    plan_arrival = train.arrival_x
+    all_trains['arrival_diff'] = (all_trains['arrival_x'] - plan_arrival).dt.total_seconds() / 3600
+
+    filtered_next = all_trains[(all_trains['arrival_x'] > plan_arrival) & (all_trains['arrival_diff'] < 6) & (all_trains['direction_x'] == train.direction_x)].copy()
+
+    while not filtered_next.empty:
+        next_train_idx = filtered_next['arrival_diff'].idxmin()
+        next_train = filtered_next.loc[next_train_idx]
+        cancellation_in = next_train.cancellation_x
+        cancellation_out = next_train.cancellation_y
+        plan_difference, delay_difference = reachable_train(train, gains, estimated_gain, worst_case)
+        # TODO: deal with cancellations in a better way
+        if plan_difference <= delay_difference or cancellation_in[-1] != 0 or cancellation_out[0] != 0:
+            filtered_next = filtered_next.drop(next_train_idx)
+        else:
+            return train, max(0, (next_train.departure_y - train.departure_y).total_seconds() / 60)
 
     return None, 0
 
@@ -253,6 +289,10 @@ def reachable_transfers(incoming, outgoing, gains={}, estimated_gain=0.0, worst_
         for train in group_id.itertuples():
             cancellation_in = train.cancellation_x
             cancellation_out = train.cancellation_y
+            cancelled_ratio_in = cancellation_in.count(1) / len(cancellation_in)
+            cancelled_ratio_out = cancellation_out.count(1) / len(cancellation_out)
+            if cancellation_in[-1] == 1:
+                cancelled_ratio_in = 1
             dest_delay = train.delay_y
 
             plan_difference, delay_difference = reachable_train(train, gains, estimated_gain, worst_case)
@@ -261,11 +301,9 @@ def reachable_transfers(incoming, outgoing, gains={}, estimated_gain=0.0, worst_
                 reachable_count[plan_difference] = {'reachable': 0, 'not_reachable': 0}
                 delay[plan_difference] = (0, 0)
 
-            # TODO: Deal with cancellations
             if plan_difference <= delay_difference:
                 reachable_count[plan_difference]['not_reachable'] += 1
-                next_train, wait_delay = find_next_train(train, group_id, gains, estimated_gain, worst_case)
-
+                next_train, wait_delay = find_next_train_out(train, group_id, gains, estimated_gain, worst_case)
                 if next_train is not None:
                     t = delay[plan_difference][0]
                     v = delay[plan_difference][1]
@@ -273,6 +311,30 @@ def reachable_transfers(incoming, outgoing, gains={}, estimated_gain=0.0, worst_
                     found_train += 1
                 else:
                     # TODO: How to deal with this (luckily doesn't happen super often)
+                    no_next_train += 1
+            elif cancelled_ratio_in > 0:
+                # TODO: How to deal with incoming cancellations
+                next_train_in, arrival_delay = find_next_train_in(train, filtered, gains, estimated_gain, worst_case)
+                print(arrival_delay)
+                reachable_count[plan_difference]['reachable'] += 1 - cancelled_ratio_in
+                reachable_count[plan_difference]['not_reachable'] += cancelled_ratio_in
+                t = delay[plan_difference][0]
+                v = delay[plan_difference][1]
+                if next_train_in is not None:
+                    delay[plan_difference] = (t + 1, (
+                                t * v + cancelled_ratio_in * (np.mean(next_train_in.delay_y) + arrival_delay) + (
+                                    1 - cancelled_ratio_in) * np.mean(dest_delay)) / (t + 1))
+                else:
+                    no_next_train += 1
+            elif cancelled_ratio_out > 0:
+                reachable_count[plan_difference]['reachable'] += 1 - cancelled_ratio_out
+                reachable_count[plan_difference]['not_reachable'] += cancelled_ratio_out
+                t = delay[plan_difference][0]
+                v = delay[plan_difference][1]
+                next_train, wait_delay = find_next_train_out(train, group_id, gains, estimated_gain, worst_case)
+                if next_train is not None:
+                    delay[plan_difference] = (t + 1, (t * v + cancelled_ratio_out * (np.mean(next_train.delay_y) + wait_delay) + (1 - cancelled_ratio_out) * np.mean(dest_delay)) / (t + 1))
+                else:
                     no_next_train += 1
             else:
                 reachable_count[plan_difference]['reachable'] += 1
@@ -288,7 +350,6 @@ with open('data/incoming.pkl', 'rb') as file:
 
 with open('data/outgoing.pkl', 'rb') as file:
     outgoing = pickle.load(file)
-
 add_direction(incoming, is_incoming=True)
 add_direction(outgoing, is_incoming=False)
 gains, average_gain = find_biggest_gain_per_next_stop(incoming, outgoing)
