@@ -3,6 +3,8 @@ from datetime import timedelta
 from datetime import datetime
 import numpy as np
 
+INPUT_DIR  = "../../dat/scraped/"
+OUTPUT_DIR = "../../dat/train_data/frankfurt_hbf"
 
 def min_time_diff(group):
     min_diff = float('inf')  # Set an initial maximum value for minimum difference
@@ -103,7 +105,7 @@ def add_directions(train_data, is_incoming):
 
     for train_out in train_data.itertuples():
         found_direction = False
-        
+
         if is_incoming:
             stops = train_out.origin
             stops.reverse()
@@ -113,7 +115,7 @@ def add_directions(train_data, is_incoming):
         # TODO check for impossible schedules in general? How?
         if 'Stuttgart Hbf' in stops and 'Berlin Hbf' in stops:
             remove_impossible_indices = index
-        
+
         for dest in stops:
             if dest in directions['South']:
                 found += 1
@@ -161,14 +163,14 @@ def add_directions(train_data, is_incoming):
         train_data = train_data[train_data.index != remove_impossible_indices]
     return train_data
 
-data_in = pd.read_csv("data/scraped_incoming_Frankfurt_Hbf.csv",
+data_in = pd.read_csv(INPUT_DIR + "scraped_incoming_Frankfurt_Hbf.csv",
                       names=['origin', 'destination', 'date', 'departure',
                              'arrival', 'train', 'delay', 'cancellation'])
-data_out = pd.read_csv("data/scraped_outgoing_Frankfurt_Hbf.csv",
+data_out = pd.read_csv(INPUT_DIR + "scraped_outgoing_Frankfurt_Hbf.csv",
                        names=['origin', 'destination', 'date', 'departure',
                               'arrival', 'train', 'delay', 'cancellation'])
 
-#add_directions(data_out)                              
+#add_directions(data_out)
 
 format_datetimes(data_in)
 format_datetimes(data_out)
@@ -253,5 +255,5 @@ outgoing['in_id'] = outgoing.loc[:, 'in_id'].apply(d_id_to_int).astype(int)
 incoming = add_directions(incoming, True)
 outgoing = add_directions(outgoing, False)
 
-#incoming.to_pickle("data/incoming.pkl")
-#outgoing.to_pickle("data/outgoing.pkl")
+incoming.to_pickle(OUTPUT_DIR + "incoming.pkl")
+outgoing.to_pickle(OUTPUT_DIR + "outgoing.pkl")
