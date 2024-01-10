@@ -1,9 +1,11 @@
 import pandas as pd
 import json
 import pickle
+from pathlib import Path
 
 
 DATA_DIR = "../../dat/train_data/frankfurt_hbf/"
+Path(DATA_DIR).mkdir(parents=True, exist_ok=True)
 
 def bootstrap(data, num_samples):
     resampled_data = []

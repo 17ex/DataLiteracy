@@ -1,9 +1,11 @@
 import json
 import matplotlib.pyplot as plt
 import numpy as np
+from pathlib import Path
 
 
 DATA_DIR = "../../dat/train_data/frankfurt_hbf/"
+Path(DATA_DIR).mkdir(parents=True, exist_ok=True)
 
 with open(DATA_DIR + 'reachable/reach_worst_case.json', 'r') as file:
     reachable_worst_case = json.load(file)

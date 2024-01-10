@@ -2,9 +2,11 @@ import pandas as pd
 from datetime import timedelta
 from datetime import datetime
 import numpy as np
+from pathlib import Path
 
 INPUT_DIR  = "../../dat/scraped/"
 OUTPUT_DIR = "../../dat/train_data/frankfurt_hbf"
+Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 
 def min_time_diff(group):
     min_diff = float('inf')  # Set an initial maximum value for minimum difference

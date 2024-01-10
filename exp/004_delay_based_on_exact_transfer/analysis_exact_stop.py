@@ -5,6 +5,7 @@ import json
 import timeit
 import pickle
 import sys
+from pathlib import Path
 
 """
 This is an attempt to get the delay and reachable transfers for every pair of stations individually.
@@ -18,6 +19,7 @@ All in all it still takes a very long time to compute all combinations of statio
 
 
 DATA_DIR = "../../dat/train_data/frankfurt_hbf/"
+Path(DATA_DIR).mkdir(parents=True, exist_ok=True)
 
 
 def find_biggest_gain_per_next_stop(incoming, outgoing):

@@ -2,9 +2,11 @@ import pandas as pd
 import json
 import numpy as np
 import pickle
+from pathlib import Path
 
 
 DATA_DIR = "../../dat/train_data/frankfurt_hbf/"
+Path(DATA_DIR).mkdir(parents=True, exist_ok=True)
 
 # TODO: Update the directions and move this to preprocessing.
 def add_direction(trains, is_incoming=False):
