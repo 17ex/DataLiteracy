@@ -2,19 +2,22 @@ import json
 import matplotlib.pyplot as plt
 import numpy as np
 
-with open('data/reachable/reach_worst_case.json', 'r') as file:
+
+DATA_DIR = "../../dat/train_data/frankfurt_hbf/"
+
+with open(DATA_DIR + 'reachable/reach_worst_case.json', 'r') as file:
     reachable_worst_case = json.load(file)
 
-with open('data/reachable/reach_0_gain.json', 'r') as file:
+with open(DATA_DIR + 'reachable/reach_0_gain.json', 'r') as file:
     reachable_count_0_gain = json.load(file)
 
-with open('data/reachable/reach_max_gain.json', 'r') as file:
+with open(DATA_DIR + 'reachable/reach_max_gain.json', 'r') as file:
     reachable_count_max_gain = json.load(file)
 
-with open('data/reachable/reach_avg_gain.json', 'r') as file:
+with open(DATA_DIR + 'reachable/reach_avg_gain.json', 'r') as file:
     reachable_count_avg_gain = json.load(file)
 
-with open('data/reachable/reach_02_gain.json') as file:
+with open(DATA_DIR + 'reachable/reach_02_gain.json') as file:
     reachable_count_02_gain = json.load(file)
 
 print(reachable_worst_case)

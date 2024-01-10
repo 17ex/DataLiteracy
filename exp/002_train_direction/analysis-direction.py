@@ -3,10 +3,12 @@ from sklearn.tree import DecisionTreeRegressor, plot_tree
 import pickle
 import matplotlib.pyplot as plt
 
-with open('data/incoming.pkl', 'rb') as file:
+DATA_DIR = "../../dat/train_data/frankfurt_hbf/"
+
+with open(DATA_DIR + 'incoming.pkl', 'rb') as file:
     incoming = pickle.load(file)
 
-with open('data/outgoing.pkl', 'rb') as file:
+with open(DATA_DIR + 'outgoing.pkl', 'rb') as file:
     outgoing = pickle.load(file)
 
 

@@ -4,6 +4,8 @@ import numpy as np
 import pickle
 
 
+DATA_DIR = "../../dat/train_data/frankfurt_hbf/"
+
 # TODO: Update the directions and move this to preprocessing.
 def add_direction(trains, is_incoming=False):
     """
@@ -345,10 +347,10 @@ def reachable_transfers(incoming, outgoing, gains={}, estimated_gain=0.0, worst_
     return reachable_count, delay
 
 
-with open('data/incoming.pkl', 'rb') as file:
+with open(DATA_DIR + 'incoming.pkl', 'rb') as file:
     incoming = pickle.load(file)
 
-with open('data/outgoing.pkl', 'rb') as file:
+with open(DATA_DIR + 'outgoing.pkl', 'rb') as file:
     outgoing = pickle.load(file)
 add_direction(incoming, is_incoming=True)
 add_direction(outgoing, is_incoming=False)
@@ -361,6 +363,6 @@ list_of_outgoings = [group for _, group in outgoing.groupby(pd.Grouper(key='date
 for i in range(len(list_of_incomings)):
     print(i)
     reachable_count_avg_gain, delay = reachable_transfers(list_of_incomings[i], list_of_outgoings[i], gains=average_gain)
-    with open('data/delay/delay_{}.json'.format(i), 'w') as file:
+    with open(DATA_DIR + 'delay/delay_{}.json'.format(i), 'w') as file:
         json.dump(delay, file)
 
