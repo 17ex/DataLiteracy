@@ -362,6 +362,8 @@ incoming['date'] = pd.to_datetime(incoming['date'])
 outgoing['date'] = pd.to_datetime(outgoing['date'])
 list_of_incomings = [group for _, group in incoming.groupby(pd.Grouper(key='date', freq='M'))]
 list_of_outgoings = [group for _, group in outgoing.groupby(pd.Grouper(key='date', freq='M'))]
+
+Path(DATA_DIR + "delay/").mkdir(parents=True, exist_ok=True)
 for i in range(len(list_of_incomings)):
     print(i)
     reachable_count_avg_gain, delay = reachable_transfers(list_of_incomings[i], list_of_outgoings[i], gains=average_gain)
