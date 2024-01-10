@@ -8,6 +8,22 @@ import itertools
 import sys
 import requests
 
+"""
+Intended to be run from the directory this script is placed in
+(along with valid cookie data in the cookie files and
+the wp user id in the corresponding file, for which you need
+a paid account on bahn-analysen).
+This script is purposefully slow and has delays between every
+request and keeps the request sizes small in order
+to not overload/create problems for the database servers
+behind www.bahn-analysen.de.
+
+Scrapes all of the data from bahn-analysen.de from the start
+of records until yesterday,
+for the origins and destinations specified in the
+stations_start.txt and stations_end.txt files.
+"""
+
 DOMAIN = 'https://www.bahn-analysen.de'
 API_ENDPOINT = 'https://www.bahn-analysen.de/wp-content/plugins/simple-table/includes/load-data.php'
 REFERER = DOMAIN + '/historische-verbindungen/'
@@ -21,27 +37,16 @@ SEC_COOKIE = "./cookie_sec.txt"
 WP_USER_ID = "./wp_id.txt"
 STATIONS_START = "./stations_start.txt"
 STATIONS_END = "./stations_end.txt"
-FILE_PREFIX_INCOMING = "scraped_incoming"
-FILE_PREFIX_OUTGOING = "scraped_outgoing"
+OUTPUT_DIR = "../../dat/scraped/"
+FILE_PREFIX_INCOMING = OUTPUT_DIR + "scraped_incoming"
+FILE_PREFIX_OUTGOING = OUTPUT_DIR + "scraped_outgoing"
 FILE_STATION_SEP = "___"
 DATE_BEGIN = "01.01.2021"
 DATE_END = (datetime.datetime.today() - datetime.timedelta(days=1)).strftime("%d.%m.%Y")
 SLEEP_MIN = 1
 SLEEP_MAX = 4
 DATE_CHUNK_LEN = 90
-
 MAX_ROWS_PER_REQUEST = 500
-
-
-# def date_ranges():
-    # current = datetime.datetime.strptime(DATE_BEGIN, "%d.%m.%Y")
-    # end_time = datetime.datetime.today() - datetime.timedelta(days=1)
-    # while current < end_time:
-        # yield (
-                # current.strftime("%d.%m.%Y"),
-                # min(current + datetime.timedelta(days=DATE_CHUNK_LEN),
-                    # end_time).strftime("%d.%m.%Y"))
-        # current += datetime.timedelta(days=DATE_CHUNK_LEN + 1)
 
 
 def create_headers():
