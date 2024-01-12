@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-def find_biggest_gain_per_next_stop(incoming, outgoing):
+def find_gains_per_next_stop(incoming, outgoing):
     """
     Finds the biggest gain per next stop based on incoming and outgoing train data.
     A gain is positive if the train was faster than it was planned and negative if it was slower.
@@ -11,12 +11,9 @@ def find_biggest_gain_per_next_stop(incoming, outgoing):
     - outgoing (DataFrame): DataFrame containing outgoing train information.
 
     Returns:
-    - gains (dict): Dictionary containing the biggest gain per next stop.
-    - average_gain (dict): Dictionary containing average gains per destination.
+    - all_gains (dict): Dictionary containing all the gains in a list for each stop.
     """
-
-    gains = {}  # Dictionary to store the biggest gain per next stop
-    average_gain = {}  # Dictionary to store average gains per next stop
+    all_gains = {} # Dictionary to store all gains per next stop
     merged = pd.merge(incoming, outgoing, on='in_id', how='inner')
     acc_too_large = 0
     acc_normal = 0
@@ -59,16 +56,12 @@ def find_biggest_gain_per_next_stop(incoming, outgoing):
         else:
             acc_normal += 1
 
-        if destination not in gains.keys():
-            gains[destination] = max(0, gain)
-            average_gain[destination] = (1, gain)
+        if destination not in all_gains.keys():
+            all_gains[destination] = [gain]
         else:
-            gains[destination] = max(gains[destination], gain)
-            t = average_gain[destination][0]
-            v = average_gain[destination][1]
-            average_gain[destination] = (t + 1, (t * v + gain) / (t + 1))
+            all_gains[destination].append(gain)
 
-    return gains, average_gain
+    return all_gains
 
 
 def reachable_train(train, gains={}, estimated_gain=0.0, worst_case=False):
@@ -77,7 +70,7 @@ def reachable_train(train, gains={}, estimated_gain=0.0, worst_case=False):
 
     Args:
     - train (row of a DataFrame): DataFrame containing information about the train.
-    - gains (dict, optional): Dictionary containing gains. Default is an empty dictionary.
+    - gains (dict, optional): Dictionary containing gains for every stop. Default is an empty dictionary.
     - estimated_gain (float, optional): Estimated gain. Default is 0.0.
     - worst_case (bool, optional): Flag for worst-case scenario. Default is False.
 
@@ -96,7 +89,7 @@ def reachable_train(train, gains={}, estimated_gain=0.0, worst_case=False):
     if worst_case:
         delay_difference = in_delay
     elif gains:
-        gain = gains.get(destination, 0)
+        gain = gains[destination]
         out_delay = max(0, dest_delay[0] + gain)
         delay_difference = max(0, in_delay - out_delay)
     else:
@@ -104,3 +97,28 @@ def reachable_train(train, gains={}, estimated_gain=0.0, worst_case=False):
         out_delay = max(0, dest_delay[0] + estimated_gain)
         delay_difference = max(0, in_delay - out_delay)
     return plan_difference, delay_difference
+
+
+def get_directions():
+    directions = {
+        'South': ['Weinheim(Bergstr)Hbf', 'Bruchsal', 'Karlsruhe-Durlach', 'Günzburg', 'Bensheim', 'Mannheim Hbf',
+                  'Stuttgart Hbf', 'Karlsruhe Hbf', 'Kaiserslautern Hbf', 'Saarbrücken Hbf',
+                  'Baden-Baden', 'Ulm Hbf', 'Heidelberg Hbf', 'Darmstadt Hbf', 'Wiesloch-Walldorf', 'Offenburg',
+                  'Freiburg(Breisgau) Hbf'],
+        'West': ['Hamm(Westf)Hbf', 'Aachen Hbf', 'Mönchengladbach Hbf', 'Siegburg/Bonn', 'Hagen Hbf', 'Duisburg Hbf',
+                 'Recklinghausen Hbf', 'Andernach', 'Köln/Bonn Flughafen', 'Solingen Hbf', 'Oberhausen Hbf',
+                 'Montabaur', 'Münster(Westf)Hbf', 'Bochum Hbf', 'Wuppertal Hbf', 'Köln Hbf', 'Mainz Hbf',
+                 'Frankfurt(Main)West',
+                 'Dortmund Hbf', 'Koblenz Hbf', 'Bonn Hbf', 'Köln Messe/Deutz', 'Düsseldorf Hbf', 'Wiesbaden Hbf',
+                 'Gelsenkirchen Hbf', 'Essen Hbf'],
+        'North': ['Kassel-Wilhelmshöhe', 'Lüneburg', 'Göttingen', 'Hannover Messe/Laatzen', 'Uelzen', 'Hannover Hbf',
+                  'Celle', 'Hamburg Dammtor', 'Neumünster', 'Treysa', 'Marburg(Lahn)', 'Gießen', 'Friedberg(Hess)',
+                  'Hamburg Hbf', 'Bremen Hbf', 'Hamburg-Altona', 'Kiel Hbf'],
+        'North East': ['Weißenfels', 'Wittenberge', 'Naumburg(Saale)Hbf', 'Stendal Hbf', 'Halle(Saale)Hbf',
+                       'Bitterfeld', 'Berlin Ostbahnhof', 'Berlin Südkreuz', 'Dresden-Neustadt', 'Wolfsburg Hbf',
+                       'Eisenach', 'Dresden Hbf', 'Berlin-Spandau', 'Lutherstadt Wittenberg Hbf', 'Riesa',
+                       'Hildesheim Hbf', 'Berlin Hbf', 'Braunschweig Hbf', 'Erfurt Hbf', 'Leipzig Hbf',
+                       'Brandenburg Hbf', 'Magdeburg Hbf', 'Berlin Gesundbrunnen'],
+        'East': ['München-Pasing', 'München Hbf', 'Augsburg Hbf', 'Plattling', 'Aschaffenburg Hbf', 'Passau Hbf',
+                 'Nürnberg Hbf', 'Würzburg Hbf', 'Regensburg Hbf', 'Ingolstadt Hbf']}
+    return directions
