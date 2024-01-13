@@ -5,6 +5,7 @@ import pickle
 from pathlib import Path
 from src.analysis_functions.exact_stop_functions import reachable_transfers
 from src.analysis_functions.general_functions import find_gains_per_next_stop, get_directions
+from src.data_scraping.dbanalysen_scraping import format_station_name_file
 
 
 DATA_DIR = "../../dat/train_data/frankfurt_hbf/"
@@ -72,16 +73,7 @@ for origin in unique_values_in:
 
     print(delay_all)
     print(reachable_all)
-    #TODO: put this into preprocessing
-    if origin == 'Köln/Bonn Flughafen':
-        origin = 'Köln-Bonn Flughafen'
-    if origin == 'Hannover Messe/Laatzen':
-        origin = 'Hannover Messe-Laatzen'
-    if origin == 'Köln Messe/Deutz':
-        origin = 'Köln Messe-Deutz'
-    if origin == 'Siegburg/Bonn':
-        origin = 'Siegburg-Bonn'
-    with open(DATA_DIR + 'delay_per_stop/delay_{}.json'.format(origin), 'w') as file:
+    with open(DATA_DIR + f'delay_per_stop/delay_{format_station_name_file(origin)}.json', 'w') as file:
         json.dump(delay_all, file)
-    with open(DATA_DIR + 'reachable_per_stop/reachable_{}.json'.format(origin), 'w') as file:
+    with open(DATA_DIR + f'reachable_per_stop/reachable_{format_station_name_file(origin)}.json', 'w') as file:
         json.dump(reachable_all, file)
