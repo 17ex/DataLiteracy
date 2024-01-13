@@ -9,7 +9,12 @@ from src.data_scraping.dbanalysen_scraping import format_station_name_file
 
 
 DATA_DIR = "../../dat/train_data/frankfurt_hbf/"
+DELAY_OUT_DIR = DATA_DIR + "delay_per_stop/"
+REACH_OUT_DIR = DATA_DIR + "reachable_per_stop/"
 Path(DATA_DIR).mkdir(parents=True, exist_ok=True)
+Path(DELAY_OUT_DIR).mkdir(parents=True, exist_ok=True)
+Path(REACH_OUT_DIR).mkdir(parents=True, exist_ok=True)
+
 with open(DATA_DIR + 'incoming.pkl', 'rb') as file:
     incoming = pickle.load(file)
 
@@ -73,7 +78,8 @@ for origin in unique_values_in:
 
     print(delay_all)
     print(reachable_all)
-    with open(DATA_DIR + f'delay_per_stop/delay_{format_station_name_file(origin)}.json', 'w') as file:
+    # TODO when changed to appropriate data formats, also save them as binaries with pickle
+    with open(DELAY_OUT_DIR + f'delay_{format_station_name_file(origin)}.json', 'w') as file:
         json.dump(delay_all, file)
-    with open(DATA_DIR + f'reachable_per_stop/reachable_{format_station_name_file(origin)}.json', 'w') as file:
+    with open(REACH_OUT_DIR + f'reachable_per_stop/reachable_{format_station_name_file(origin)}.json', 'w') as file:
         json.dump(reachable_all, file)
