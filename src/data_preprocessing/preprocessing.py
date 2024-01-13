@@ -4,8 +4,8 @@ from datetime import datetime
 import numpy as np
 from pathlib import Path
 
-INPUT_DIR  = "../../dat/scraped/"
-OUTPUT_DIR = "../../dat/train_data/frankfurt_hbf"
+INPUT_DIR = "../../dat/scraped/"
+OUTPUT_DIR = "../../dat/train_data/frankfurt_hbf/"
 Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 
 def min_time_diff(group):
