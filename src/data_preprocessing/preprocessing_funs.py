@@ -56,6 +56,13 @@ def format_datetimes(df):
     df.loc[:, 'date'] = df.loc[:, 'departure'].apply(lambda d: d.date())
 
 
+def format_station_name_file(station):
+    return station.replace(" ", "_") \
+            .replace("(", "PARO") \
+            .replace(")", "PARC") \
+            .replace("/", "SLASH")
+
+
 def all_equal(lst):
     return len(set(lst)) == 1
 

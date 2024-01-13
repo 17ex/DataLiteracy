@@ -8,6 +8,9 @@ import itertools
 import sys
 import requests
 
+sys.path.append("../..")
+from src.data_preprocessing.preprocessing_funs import format_station_name_file
+
 """
 Intended to be run from the directory this script is placed in
 (along with valid cookie data in the cookie files and
@@ -92,13 +95,6 @@ def format_station_name(station):
             .replace("ö", "%C3%B6") \
             .replace("ü", "%C3%BC") \
             .replace("ß", "%C3%9F")
-
-
-def format_station_name_file(station):
-    return station.replace(" ", "_") \
-            .replace("(", "PARO") \
-            .replace(")", "PARC") \
-            .replace("/", "SLASH")
 
 
 def format_request_payload(payload):

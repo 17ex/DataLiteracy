@@ -8,7 +8,7 @@ import sys
 sys.path.append("../..")
 from src.analysis_functions.exact_stop_functions import reachable_transfers
 from src.analysis_functions.general_functions import find_gains_per_next_stop, get_directions
-from src.data_scraping.dbanalysen_scraping import format_station_name_file
+from src.data_preprocessing.preprocessing_funs import format_station_name_file
 
 
 DATA_DIR = "../../dat/train_data/frankfurt_hbf/"

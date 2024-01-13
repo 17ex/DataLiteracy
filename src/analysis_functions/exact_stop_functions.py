@@ -1,4 +1,4 @@
-from general_functions import reachable_train
+from .general_functions import reachable_train
 
 
 def find_next_train(train, filtered_next, gains={}, estimated_gain=0.0, worst_case=False):
