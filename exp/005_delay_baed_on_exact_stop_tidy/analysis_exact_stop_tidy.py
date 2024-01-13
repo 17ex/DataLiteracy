@@ -3,6 +3,9 @@ import numpy as np
 import json
 import pickle
 from pathlib import Path
+import sys
+
+sys.path.append("../..")
 from src.analysis_functions.exact_stop_functions import reachable_transfers
 from src.analysis_functions.general_functions import find_gains_per_next_stop, get_directions
 from src.data_scraping.dbanalysen_scraping import format_station_name_file
