@@ -2,7 +2,6 @@
 *.old
 data/
 venv/
-*.ipynb
 net_directions.xcf
 __pycache__
 .ipynb_checkpoints
