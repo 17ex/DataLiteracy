@@ -6,7 +6,7 @@ from pathlib import Path
 from preprocessing_funs import *
 
 INPUT_DIR = "../../dat/scraped/"
-OUTPUT_DIR = "../../dat/train_data/frankfurt_hbf"
+OUTPUT_DIR = "../../dat/train_data/frankfurt_hbf/"
 Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 
 

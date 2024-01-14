@@ -27,10 +27,13 @@ all_gains = general.find_gains_per_next_stop(incoming, outgoing)
 median_gain = {}
 average_gain = {}
 max_gain = {}
+pos_avg_gain = {}
 for key in all_gains.keys():
     median_gain[key] = np.median(all_gains[key])
     average_gain[key] = np.mean(all_gains[key])
     max_gain[key] = np.amax(all_gains[key])
+    positive_numbers = [num for num in all_gains[key] if num > 0]
+    pos_avg_gain[key] = np.mean(positive_numbers)
 directions = general.get_directions()
 unique_values_in = set()
 unique_values_out = set()
