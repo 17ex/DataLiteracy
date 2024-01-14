@@ -37,12 +37,12 @@ def find_next_train(train, filtered_next, gains={}, estimated_gain=0.0, worst_ca
     return None, 0, 0
 
 
-def reachable_transfers(incoming_origin, outgoing, origin, destination, gains={}, estimated_gain=0.0, worst_case=False):
+def reachable_transfers(incoming_from_origin, outgoing, origin, destination, gains={}, estimated_gain=0.0, worst_case=False):
     """
     Identifies reachable transfers between incoming and outgoing trains.
 
     Args:
-    - incoming (DataFrame): DataFrame containing incoming train information.
+    - incoming_from_origin (DataFrame): DataFrame containing trains that go from origin to Frankfurt
     - outgoing (DataFrame): DataFrame containing outgoing train information.
     - gains (dict, optional): Dictionary containing gains. Default is an empty dictionary.
     - estimated_gain (float, optional): Estimated gain. Default is 0.0.
@@ -53,8 +53,8 @@ def reachable_transfers(incoming_origin, outgoing, origin, destination, gains={}
     - delay (dict): Average delay information for each plan difference.
     """
     max_hours = 3
-    outgoing_dest = outgoing[outgoing['destination'].apply(lambda x: any(destination == value for value in x))]
-    filtered = incoming_origin.merge(outgoing_dest, how='outer', on='date')
+    outgoing_to_dest = outgoing[outgoing['destination'].apply(lambda x: any(destination == value for value in x))]
+    filtered = incoming_from_origin.merge(outgoing_to_dest, how='outer', on='date')
     filtered['time_difference'] = (filtered['departure_y'] - filtered['arrival_x']).dt.total_seconds() / 60
     filtered = filtered[(filtered['arrival_x'] < filtered['departure_y']) & (filtered['time_difference'] <= max_hours * 60)
                         & (filtered['in_id_x'] != filtered['in_id_y'])]
@@ -66,8 +66,8 @@ def reachable_transfers(incoming_origin, outgoing, origin, destination, gains={}
     not_found_x = 0
     found_train_y = 0
     not_found_y = 0
-    for id in set(unique_ids):
-        group_id = filtered[filtered['in_id_x'] == id]
+    for train_id in set(unique_ids):
+        group_id = filtered[filtered['in_id_x'] == train_id]
         example_train = group_id.iloc[0]
         group_date = filtered[filtered['date'] == example_train['date']]
         for train in group_id.itertuples():
