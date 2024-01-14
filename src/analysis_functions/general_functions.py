@@ -89,7 +89,10 @@ def reachable_train(train, gains={}, estimated_gain=0.0, worst_case=False):
     if worst_case:
         delay_difference = in_delay
     elif gains:
-        gain = gains[destination]
+        if destination in gains.keys():
+            gain = gains[destination]
+        else:
+            gain = 0
         out_delay = max(0, dest_delay[0] + gain)
         delay_difference = max(0, in_delay - out_delay)
     else:
