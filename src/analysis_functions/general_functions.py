@@ -65,6 +65,7 @@ def find_gains_per_next_stop(incoming, outgoing):
 
 
 def reachable_train(train, gains={}, estimated_gain=0.0, worst_case=False):
+    # TODO rename this function
     """
     Calculates the plan difference and delay difference for a given train.
 
@@ -78,6 +79,7 @@ def reachable_train(train, gains={}, estimated_gain=0.0, worst_case=False):
     - plan_difference (float): Time difference between departure and arrival at a specific station.
     - delay_difference (float): Difference between the planned delay and the actual delay.
     """
+    # TODO what is delay_difference really?
     arrival_FRA = train.arrival_x
     departure_FRA = train.departure_y
     in_delay = train.delay_x
@@ -96,6 +98,8 @@ def reachable_train(train, gains={}, estimated_gain=0.0, worst_case=False):
         out_delay = max(0, dest_delay[0] + gain)
         delay_difference = max(0, in_delay - out_delay)
     else:
+        # TODO
+        # what should this line do?
         estimated_gain * (dest_arrival - departure_FRA).total_seconds() / 60
         out_delay = max(0, dest_delay[0] + estimated_gain)
         delay_difference = max(0, in_delay - out_delay)
