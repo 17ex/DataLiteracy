@@ -39,6 +39,8 @@ for key in all_gains.keys():
     max_gain[key] = np.amax(all_gains[key])
     positive_numbers = [num for num in all_gains[key] if num > 0]
     pos_avg_gain[key] = np.mean(positive_numbers)
+    # TODO properly handle case when there are no direct connections
+    # (when the above are empty or 0)
 
 directions = general.get_directions()
 
@@ -46,8 +48,10 @@ unique_stations_in = set()
 unique_stations_out = set()
 for sublist in incoming['origin']:
     unique_stations_in.update(sublist)
+
 for sublist in outgoing['destination']:
     unique_stations_out.update(sublist)
+
 unique_stations_in.remove('Frankfurt(Main)Hbf')
 unique_stations_out.remove('Frankfurt(Main)Hbf')
 
@@ -61,7 +65,6 @@ for origin in unique_stations_in:
     reachable_all = {}
     print(origin)
     for destination in unique_stations_out:
-        # print(destination)
         if destination not in station_subset:
             continue
         if origin == destination:
@@ -72,23 +75,14 @@ for origin in unique_stations_in:
             if origin in value_list:
                 org_direction = key
                 break
-        if org_direction is not None:
-            # TODO
-            # this does never not happen.
-            # the checks could be removed.
+        if org_direction:
             for key, value_list in directions.items():
                 if destination in value_list:
                     dest_direction = key
                     break
-        if dest_direction is not None:
-            # TODO
-            # this does never not happen.
-            # the checks could be removed.
-            if org_direction and dest_direction and org_direction == dest_direction:
-                # TODO
-                # would we not want to continue only if either directions could be determined?
-                # in that case, maybe replace above with
-                # not org_direction or not dest_direction or org_direction == dest_direction
+            if dest_direction and org_direction == dest_direction:
+                # Maybe skip also if directions could not be determined,
+                # and log it. Should not get called for that case though.
                 continue
         print(destination)
         delay = exact_stop.reachable_transfers(incoming_from_origin, outgoing, origin, destination, gains=average_gain)

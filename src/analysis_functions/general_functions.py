@@ -79,7 +79,6 @@ def reachable_train(train, gains={}, estimated_gain=0.0, worst_case=False):
     - plan_difference (float): Time difference between departure and arrival at a specific station.
     - delay_difference (float): Difference between the planned delay and the actual delay.
     """
-    # TODO what is delay_difference really?
     arrival_FRA = train.arrival_x
     departure_FRA = train.departure_y
     in_delay = train.delay_x
