@@ -1,5 +1,4 @@
-from src.analysis_functions.general_functions import reachable_train
-
+from src.analysis_functions.general_functions import can_take_connecting_train
 
 def find_next_train(train, next_trains, gains={}, estimated_gain=0.0, worst_case=False):
     """
@@ -31,14 +30,15 @@ def find_next_train(train, next_trains, gains={}, estimated_gain=0.0, worst_case
         origin_idx = int(next_train.origin_idx)
         cancellation_out = next_train.cancellation_y
         cancellation_in = next_train.cancellation_x
-        plan_difference, delay_difference = reachable_train(next_train, gains, estimated_gain, worst_case)
         if (
                 cancellation_in[origin_idx] != 0 or
                 cancellation_in[-1] != 0 or
-                plan_difference <= delay_difference or
-                cancellation_out[dest_idx] != 0
+                cancellation_out[dest_idx] != 0 or
+                not can_take_connecting_train(
+                    next_train, gains, estimated_gain, worst_case)
            ):
-            # If it is impossible to take this train (eg. it was canceled)
+            # If it is impossible to take this train (eg. it was canceled,
+            # or it departs before the first train arrived)
             next_trains = next_trains.drop(next_train_idx)
         else:
             return next_train, (next_train.arrival_y[dest_idx] - plan_arrival).total_seconds() / 60, dest_idx

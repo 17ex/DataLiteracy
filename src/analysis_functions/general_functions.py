@@ -64,13 +64,19 @@ def find_gains_per_next_stop(incoming, outgoing):
     return all_gains
 
 
-def reachable_train(train, gains={}, estimated_gain=0.0, worst_case=False):
-    # TODO rename this function
+def can_take_connecting_train(train_pair, gains={}, estimated_gain=0.0, worst_case=False):
     """
-    Calculates the plan difference and delay difference for a given train.
+    Estimates whether the connecting train can be taken, based on an estimation of
+    its actual departure, based on its planned departure. If worst_case=False,
+    it is also taken into account how late the departing train
+    was at its next stop, and an estimation of how long it could have additionally
+    waited at Frankfurt, based on how much of the additional delay could
+    be remedied before the next stop (specified in gains).
+    In the worst-case scenario, it is assumed that the connecting train
+    departed as planned (without delay).
 
     Args:
-    - train (row of a DataFrame): DataFrame containing information about the train.
+    - train_pair (row of a DataFrame): DataFrame containing information about the trains.
     - gains (dict, optional): Dictionary containing gains for every stop. Default is an empty dictionary.
     - estimated_gain (float, optional): Estimated gain. Default is 0.0.
     - worst_case (bool, optional): Flag for worst-case scenario. Default is False.
@@ -79,30 +85,28 @@ def reachable_train(train, gains={}, estimated_gain=0.0, worst_case=False):
     - plan_difference (float): Time difference between departure and arrival at a specific station.
     - delay_difference (float): Difference between the planned delay and the actual delay.
     """
-    arrival_FRA = train.arrival_x
-    departure_FRA = train.departure_y
-    in_delay = train.delay_x
-    dest_delay = train.delay_y
-    dest_arrival = train.arrival_y[0]
-    destination = train.destination_y[0]
+    arrival_FRA = train_pair.arrival_x
+    departure_FRA = train_pair.departure_y
+    in_delay = train_pair.delay_x
+    next_stop = train_pair.destination_y[0]
+    delay_at_next_stop = train_pair.delay_y[0]
+    arrival_at_next_stop = train_pair.arrival_y[0]
     plan_difference = (departure_FRA - arrival_FRA).total_seconds() / 60
 
     if worst_case:
-        delay_difference = in_delay
+        out_delay = 0
     elif gains:
-        if destination in gains.keys():
-            gain = gains[destination]
+        if next_stop in gains.keys():
+            potential_gain = gains[next_stop]
         else:
-            gain = 0
-        out_delay = max(0, dest_delay[0] + gain)
-        delay_difference = max(0, in_delay - out_delay)
+            potential_gain = 0
+        out_delay = max(0, delay_at_next_stop + potential_gain)
     else:
         # TODO
         # what should this line do?
-        estimated_gain * (dest_arrival - departure_FRA).total_seconds() / 60
-        out_delay = max(0, dest_delay[0] + estimated_gain)
-        delay_difference = max(0, in_delay - out_delay)
-    return plan_difference, delay_difference
+        estimated_gain * (arrival_at_next_stop - departure_FRA).total_seconds() / 60
+        out_delay = max(0, delay_at_next_stop + estimated_gain)
+    return plan_difference > max(0, in_delay - out_delay)
 
 
 def get_directions():
