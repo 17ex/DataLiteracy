@@ -24,7 +24,7 @@ def find_next_train(train, next_train_candidates, gains={}, estimated_gain=0.0, 
     next_train_candidates = next_train_candidates[
             ~next_train_candidates['cancellation_inbound']
             & ~next_train_candidates['cancellation_outbound']
-            & next_train_candidates['arrival_destination'] > plan_arrival
+            & (next_train_candidates['arrival_destination'] > plan_arrival)
             ].sort_values(by=['arrival_destination'])
     while not next_train_candidates.empty:
         next_train = next_train_candidates.iloc[0]
@@ -140,7 +140,7 @@ def reachable_transfers(incoming_from_origin, outgoing, origin, destination, gai
                                     gains,
                                     estimated_gain,
                                     worst_case)
-                if next_train:
+                if next_train is not None:
                     num_found_alternative_to_frankfurt += 1
                     delay['delay'].append(next_train.delay_y[dest_idx] + extra_delay)
                 else:
@@ -157,7 +157,7 @@ def reachable_transfers(incoming_from_origin, outgoing, origin, destination, gai
                                     gains,
                                     estimated_gain,
                                     worst_case)
-                if next_train:
+                if next_train is not None:
                     num_found_alternative_from_frankfurt += 1
                     delay['delay'].append(next_train.delay_y[dest_idx] + extra_delay)
                 else:
