@@ -1,4 +1,4 @@
-from src.analysis_functions.general_functions import can_take_connecting_train
+from src.analysis_functions.general_functions import can_take_connecting_train, get_plan_and_delay_difference
 
 def find_next_train(train, next_train_candidates, gains={}, estimated_gain=0.0, worst_case=False):
     """
@@ -18,27 +18,19 @@ def find_next_train(train, next_train_candidates, gains={}, estimated_gain=0.0, 
     dest_idx = train.destination_idx
     plan_arrival = train.arrival_destination
     # only look at trains that arrive later at the destination
-    # TODO sort first somewhere (maybe outside this function).
-    # Then the next operations can maybe be replaced if iterating in order,
-    # which would be way faster.
+    # TODO verify whether we should keep the restriction/simplification
+    # arrival_destination > plan_arrival
+    # or if it hurts us. Should not hurt performance much to remove
     next_train_candidates = next_train_candidates[
-            next_train_candidates['arrival_destination'] > plan_arrival] \
-        .sort_values(by=['arrival_destination'])
+            ~next_train_candidates['cancellation_inbound']
+            & ~next_train_candidates['cancellation_outbound']
+            & next_train_candidates['arrival_destination'] > plan_arrival
+            ].sort_values(by=['arrival_destination'])
     while not next_train_candidates.empty:
         next_train = next_train_candidates.iloc[0]
         dest_idx = next_train.destination_idx
-        origin_idx = int(next_train.origin_idx)
-        cancellation_out = next_train.cancellation_y
-        cancellation_in = next_train.cancellation_x
-        if (
-                cancellation_in[origin_idx] != 0 or
-                cancellation_in[-1] != 0 or
-                cancellation_out[dest_idx] != 0 or
-                not can_take_connecting_train(
-                    next_train, gains, estimated_gain, worst_case)
-           ):
-            # If it is impossible to take this train (eg. it was canceled,
-            # or it departs before the first train arrived)
+        if not can_take_connecting_train(
+                    next_train, gains, estimated_gain, worst_case):
             next_train_candidates.drop(next_train_candidates.index[0], inplace=True)
         else:
             return next_train, (next_train.arrival_destination - plan_arrival).total_seconds() / 60, dest_idx
@@ -70,6 +62,8 @@ def reachable_transfers(incoming_from_origin, outgoing, origin, destination, gai
     candidate_transfers = incoming_from_origin.merge(outgoing_to_dest,
                                                      how='outer',
                                                      on='date')
+    candidate_transfers.dropna(subset='origin_idx', inplace=True)
+    candidate_transfers['origin_idx'] = candidate_transfers['origin_idx'].astype(int)
     # Filter out trains that go from origin to destination directly,
     # as there is no train transfer in that case.
     candidate_transfers = candidate_transfers[
@@ -89,10 +83,20 @@ def reachable_transfers(incoming_from_origin, outgoing, origin, destination, gai
             candidate_transfers['destination_y'] \
             .apply(lambda destinations: destinations.index(destination))
     # Store important arrival times separately
+    # TODO probably move the below code to preprocessing
     candidate_transfers['arrival_destination'] = candidate_transfers.apply(
-            lambda r: r['arrival_y'][r['destination_idx']], axis=1)
+            lambda tp: tp['arrival_y'][tp['destination_idx']], axis=1)
     candidate_transfers['arrival_next_stop'] = candidate_transfers['arrival_y'] \
             .apply(lambda arrival_lst: arrival_lst[0])
+    candidate_transfers['cancellation_inbound'] = candidate_transfers.apply(
+            lambda tp: tp['cancellation_x'][-1] != 0 \
+                    | tp['cancellation_x'][tp['origin_idx']] != 0,
+            axis=1
+            )
+    candidate_transfers['cancellation_outbound'] = candidate_transfers.apply(
+            lambda tp: tp['cancellation_y'][tp['destination_idx']] != 0,
+            axis=1
+            )
     # TODO above, figure out which combinations are gonna be a problem when looking for transfers over 12pm.
     # probably only trains that started after 12pm
     delay = {'switch time': [], 'date': [], 'delay': [], 'reachable': []}
@@ -113,17 +117,16 @@ def reachable_transfers(incoming_from_origin, outgoing, origin, destination, gai
             if train.transfer_time > 60:
                 num_discarded += 1
                 continue
-            origin_idx = int(train.origin_idx)
             dest_idx = train.destination_idx
             plan_arrival = train.arrival_y[dest_idx]
             arrival_FRA = train.arrival_fra
             plan_departure_origin = train.departure_origin
             plan_difference, delay_difference = \
-                can_take_connecting_train(train, gains, estimated_gain, worst_case)
+                get_plan_and_delay_difference(train, gains, estimated_gain, worst_case)
             delay['switch time'].append(plan_difference)
             delay['date'].append(plan_arrival.strftime('%Y-%m-%d %H:%M:%S'))
 
-            if train.cancellation_x[origin_idx] != 0 or train.cancellation_x[-1] != 0:
+            if train.cancellation_inbound:
                 # If the train that should arrive in Frankfurt was cancelled
                 # Find the next train going from origin to Frankfurt as alternative
                 delay['reachable'].append(1)
@@ -143,7 +146,7 @@ def reachable_transfers(incoming_from_origin, outgoing, origin, destination, gai
                 else:
                     num_not_found_alternative_to_frankfurt += 1
                     delay['delay'].append(max_delay_minutes)
-            elif train.cancellation_y[dest_idx] != 0 or plan_difference <= delay_difference:
+            elif train.cancellation_outbound or plan_difference <= delay_difference:
                 # If the departing train was cancelled or transfer to it is impossible
                 delay['reachable'].append(2)
                 # only look at trains that leave later in Frankfurt
