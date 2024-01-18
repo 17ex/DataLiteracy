@@ -1,11 +1,11 @@
 from src.analysis_functions.general_functions import can_take_connecting_train
 
-def find_next_train(train, next_trains, gains={}, estimated_gain=0.0, worst_case=False):
+def find_next_train(train, next_train_candidates, gains={}, estimated_gain=0.0, worst_case=False):
     """
     Finds the next train based on certain criteria.
 
     Args:
-    - train (DataFrame): DataFrame containing information about the current train.
+    - train (Pandas): Pandas object containing information about the current train.
     - next_trains (DataFrame): DataFrame containing information about the trains that could be taken
     - gains (dict, optional): Dictionary containing gains. Default is an empty dictionary.
     - estimated_gain (float, optional): Estimated gain. Default is 0.0.
@@ -16,14 +16,16 @@ def find_next_train(train, next_trains, gains={}, estimated_gain=0.0, worst_case
     - time_difference (float): Time difference in minutes between the next train's departure and the current train's plan_departure.
     """
     dest_idx = train.destination_idx
-    plan_arrival = train.arrival_y[dest_idx]
+    plan_arrival = train.arrival_destination
     # only look at trains that arrive later at the destination
     # TODO sort first somewhere (maybe outside this function).
-    # Then the next operations can maybe be replaced if iterating in order, which would be way faster.
-    next_trains = next_trains[next_trains['arrival_destination'] > plan_arrival]
-    while not next_trains.empty:
-        next_train_idx = next_trains['arrival_destination'].idxmin()
-        next_train = next_trains.loc[next_train_idx]
+    # Then the next operations can maybe be replaced if iterating in order,
+    # which would be way faster.
+    next_train_candidates = next_train_candidates[
+            next_train_candidates['arrival_destination'] > plan_arrival] \
+        .sort_values(by=['arrival_destination'])
+    while not next_train_candidates.empty:
+        next_train = next_train_candidates.iloc[0]
         dest_idx = next_train.destination_idx
         origin_idx = int(next_train.origin_idx)
         cancellation_out = next_train.cancellation_y
@@ -37,9 +39,9 @@ def find_next_train(train, next_trains, gains={}, estimated_gain=0.0, worst_case
            ):
             # If it is impossible to take this train (eg. it was canceled,
             # or it departs before the first train arrived)
-            next_trains = next_trains.drop(next_train_idx)
+            next_train_candidates.drop(next_train_candidates.index[0], inplace=True)
         else:
-            return next_train, (next_train.arrival_y[dest_idx] - plan_arrival).total_seconds() / 60, dest_idx
+            return next_train, (next_train.arrival_destination - plan_arrival).total_seconds() / 60, dest_idx
     return None, 0, 0
 
 
