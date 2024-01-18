@@ -53,6 +53,7 @@ def reachable_transfers(incoming_from_origin, outgoing, origin, destination, gai
     - delay (dict): Average delay information for each plan difference.
     """
     max_delay_minutes = max_hours * 60
+    delay = {'switch time': [], 'date': [], 'delay': [], 'reachable': []}
     outgoing_to_dest = outgoing[
             outgoing['destination']
             .apply(lambda destinations: destination in destinations)]
@@ -79,6 +80,8 @@ def reachable_transfers(incoming_from_origin, outgoing, origin, destination, gai
     candidate_transfers = candidate_transfers[
             (candidate_transfers['transfer_time'] > 0) &
             (candidate_transfers['transfer_time'] <= max_delay_minutes)]
+    if candidate_transfers.empty:
+        return delay
     candidate_transfers.loc[:, 'destination_idx'] = \
             candidate_transfers['destination_y'] \
             .apply(lambda destinations: destinations.index(destination))
@@ -99,7 +102,6 @@ def reachable_transfers(incoming_from_origin, outgoing, origin, destination, gai
             )
     # TODO above, figure out which combinations are gonna be a problem when looking for transfers over 12pm.
     # probably only trains that started after 12pm
-    delay = {'switch time': [], 'date': [], 'delay': [], 'reachable': []}
     num_discarded = 0
     unique_ids = candidate_transfers['in_id_x'].unique()
     # Counters for a quick sanity check. Not used further in the analysis.
