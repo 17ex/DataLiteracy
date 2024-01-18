@@ -119,7 +119,7 @@ def reachable_transfers(incoming_from_origin, outgoing, origin, destination, gai
             arrival_FRA = train.arrival_fra
             plan_departure_origin = train.departure_origin
             plan_difference, delay_difference = \
-                reachable_train(train, gains, estimated_gain, worst_case)
+                can_take_connecting_train(train, gains, estimated_gain, worst_case)
             delay['switch time'].append(plan_difference)
             delay['date'].append(plan_arrival.strftime('%Y-%m-%d %H:%M:%S'))
 
