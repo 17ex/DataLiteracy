@@ -20,11 +20,9 @@ def find_next_train(train, next_trains, gains={}, estimated_gain=0.0, worst_case
     # only look at trains that arrive later at the destination
     # TODO sort first somewhere (maybe outside this function).
     # Then the next operations can maybe be replaced if iterating in order, which would be way faster.
-    next_trains = next_trains[
-        # next_trains.apply(lambda row: row['arrival_y'][row['destination_idx']] > plan_arrival, axis=1)]
-        next_trains.apply(lambda row: row['arrival_y'][row['destination_idx']] > plan_arrival, axis=1)]
+    next_trains = next_trains[next_trains['arrival_destination'] > plan_arrival]
     while not next_trains.empty:
-        next_train_idx = next_trains.apply(lambda row: row['arrival_y'][row['destination_idx']], axis=1).idxmin()
+        next_train_idx = next_trains['arrival_destination'].idxmin()
         next_train = next_trains.loc[next_train_idx]
         dest_idx = next_train.destination_idx
         origin_idx = int(next_train.origin_idx)
@@ -88,6 +86,11 @@ def reachable_transfers(incoming_from_origin, outgoing, origin, destination, gai
     candidate_transfers.loc[:, 'destination_idx'] = \
             candidate_transfers['destination_y'] \
             .apply(lambda destinations: destinations.index(destination))
+    # Store important arrival times separately
+    candidate_transfers['arrival_destination'] = candidate_transfers.apply(
+            lambda r: r['arrival_y'][r['destination_idx']], axis=1)
+    candidate_transfers['arrival_next_stop'] = candidate_transfers['arrival_y'] \
+            .apply(lambda arrival_lst: arrival_lst[0])
     # TODO above, figure out which combinations are gonna be a problem when looking for transfers over 12pm.
     # probably only trains that started after 12pm
     delay = {'switch time': [], 'date': [], 'delay': [], 'reachable': []}

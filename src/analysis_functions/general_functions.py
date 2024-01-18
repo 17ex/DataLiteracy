@@ -90,7 +90,7 @@ def can_take_connecting_train(train_pair, gains={}, estimated_gain=0.0, worst_ca
     in_delay = train_pair.delay_x
     next_stop = train_pair.destination_y[0]
     delay_at_next_stop = train_pair.delay_y[0]
-    arrival_at_next_stop = train_pair.arrival_y[0]
+    arrival_at_next_stop = train_pair.arrival_next_stop
     plan_difference = (departure_FRA - arrival_FRA).total_seconds() / 60
 
     if worst_case:
