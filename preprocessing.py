@@ -84,7 +84,31 @@ def d_id_to_int(d):
         return int(d)
 
 
-def add_directions(train_data, is_incoming):
+def fix_delays(row):
+    change_count = 0
+    delays = row['delay']
+    old_delays = delays.copy()
+    #departures = row['departure']
+    arrivals = row['arrival']
+    
+    for i in range(1, len(delays)):
+        # Calculate time difference in minutes
+        time_diff_minutes = (arrivals[i] - arrivals[i-1]).total_seconds() / 60
+        threshold = 0.2 * time_diff_minutes
+        
+        if delays[i-1] > 10 and delays[i] == 0 and delays[i-1] - delays[i] > threshold:
+            if i < len(delays) - 1:
+                delays[i] = (delays[i-1] + delays[i+1]) // 2
+            else:
+                delays[i] = delays[i-1]
+            change_count += 1
+    if change_count > 0:
+        #print(f"{old_delays} -> {delays}")
+        pass
+    return delays, change_count
+
+
+def add_directions(train_data, is_incoming, debug=False):
 
     direction_list = [""] * len(train_data)
     directions = {'South': ['Weinheim(Bergstr)Hbf', 'Bruchsal', 'Karlsruhe-Durlach', 'Günzburg', 'Bensheim', 'Mannheim Hbf', 'Stuttgart Hbf', 'Karlsruhe Hbf', 'Kaiserslautern Hbf', 'Saarbrücken Hbf',
@@ -95,70 +119,67 @@ def add_directions(train_data, is_incoming):
               'North East': ['Weißenfels', 'Wittenberge', 'Naumburg(Saale)Hbf', 'Stendal Hbf', 'Halle(Saale)Hbf', 'Bitterfeld', 'Berlin Ostbahnhof','Berlin Südkreuz', 'Dresden-Neustadt', 'Wolfsburg Hbf', 'Eisenach', 'Dresden Hbf', 'Berlin-Spandau', 'Lutherstadt Wittenberg Hbf', 'Riesa', 'Hildesheim Hbf', 'Berlin Hbf', 'Braunschweig Hbf', 'Erfurt Hbf', 'Leipzig Hbf',
                              'Brandenburg Hbf', 'Magdeburg Hbf', 'Berlin Gesundbrunnen'],
               'East': ['München-Pasing', 'München Hbf', 'Augsburg Hbf', 'Plattling', 'Aschaffenburg Hbf', 'Passau Hbf', 'Nürnberg Hbf', 'Würzburg Hbf', 'Regensburg Hbf', 'Ingolstadt Hbf']}
-    not_found = 0
-    found = 0
-    airport = 0
-    index = 0
-    remove_impossible_indices = -1
+    
+    direction_list = [""] * len(train_data)
+    remove_indices = set()
+    not_found = found = airport = count_impossible = 0
 
-    for train_out in train_data.itertuples():
-        found_direction = False
+    for index, train_out in enumerate(train_data.itertuples()):
+        direction_set = set()
         
         if is_incoming:
-            stops = train_out.origin
+            stops = list(train_out.origin)
             stops.reverse()
         else:
-            stops = train_out.destination
+            stops = list(train_out.destination)
 
-        # TODO check for impossible schedules in general? How?
-        if 'Stuttgart Hbf' in stops and 'Berlin Hbf' in stops:
-            remove_impossible_indices = index
-        
         for dest in stops:
-            if dest in directions['South']:
-                found += 1
-                found_direction = True
-                direction_list[index] = 'South'
-                break
-            elif dest in directions['West']:
-                found += 1
-                found_direction = True
-                direction_list[index] = 'West'
-                break
-            elif dest in directions['North']:
-                found += 1
-                found_direction = True
-                direction_list[index] = 'North'
-                break
-            elif dest in directions['North East']:
-                found += 1
-                found_direction = True
-                direction_list[index] = 'North East'
-                break
-            elif dest in directions['East']:
-                found += 1
-                found_direction = True
-                direction_list[index] = 'East'
-                break
-        if not found_direction:
-            not_found += 1
-            direction_list[index] = 'None'
-            for dest in train_out.destination:
-                if dest in ['Frankfurt am Main Flughafen Fernbahnhof']:
-                    airport += 1
+            for direction, stations in directions.items():
+                if dest in stations:
+                    direction_set.add(direction)
                     break
-        index += 1
+
+        if debug:
+            if "South" in direction_set and ("West" in direction_set or "North" in direction_set or "North East" in direction_set):
+                print(stops)
+                count_impossible += 1
+                print(index)
+            if "East" in direction_set and ("West" in direction_set or "North" in direction_set):
+                print(stops)
+                print(train_out.departure)
+                print(train_out.arrival)
+                count_impossible += 1
+                print(index)
+                continue
+
+        direction_list[index] = next(iter(direction_set), 'None')
+        if direction_list[index] == 'None':
+            not_found += 1
+            if 'Frankfurt am Main Flughafen Fernbahnhof' in stops:
+                airport += 1
+        else:
+            found += 1
 
     train_data['direction'] = direction_list
 
-    print(f"Set directions of {found} trains.")
-    print(f"Did not find clear direction of {not_found} trains.")
+    
+    # Remove indices found while debugging
     if is_incoming:
-        print(f"Out of those, {airport} trains start at Frankfurt airport without other stops.")
+        remove_indices.update([35371, 35372, 88424])
     else:
+        remove_indices.update([125187, 125225, 153510, 153822])
+    train_data = train_data.drop(index=remove_indices)
+
+    if debug:
+        print(count_impossible)
+    if is_incoming:
+        print(f"Set directions of {found} incoming trains.")
+        print(f"Did not find clear direction of {not_found} trains.")
         print(f"Out of those, {airport} trains end at Frankfurt airport without other stops.")
-    if remove_impossible_indices >= 0:
-        train_data = train_data[train_data.index != remove_impossible_indices]
+    else:
+        print(f"Set directions of {found} outgoing trains.")
+        print(f"Did not find clear direction of {not_found} trains.")
+        print(f"Out of those, {airport} trains start at Frankfurt airport without other stops.")
     return train_data
 
 data_in = pd.read_csv("data/scraped_incoming_Frankfurt_Hbf.csv",
@@ -168,12 +189,11 @@ data_out = pd.read_csv("data/scraped_outgoing_Frankfurt_Hbf.csv",
                        names=['origin', 'destination', 'date', 'departure',
                               'arrival', 'train', 'delay', 'cancellation'])
 
-#add_directions(data_out)                              
+print(f"Number of incoming datapoints: {len(data_in)}")
+print(f"Number of outgoing datapoints: {len(data_out)}")
 
 format_datetimes(data_in)
 format_datetimes(data_out)
-
-
 
 data_in = data_in.sort_values(["date", "departure"])
 data_out = data_out.sort_values(["date", "arrival"])
@@ -186,10 +206,25 @@ result_out = data_out.groupby(['train', 'date', 'departure', 'origin'])[
         ['destination', 'arrival', 'delay', 'cancellation']
         ].agg(list_agg).reset_index()
 
+
+# Set wrongly as 0 given delays to an interpolation
+changes = result_out.apply(fix_delays, axis=1)
+result_out['delay'] = changes.apply(lambda x: x[0])
+total_changes = changes.apply(lambda x: x[1]).sum()
+
+# Count total entries
+num_entries = 0
+for delay_list in result_out["delay"]:
+    num_entries += len(delay_list)
+
+print(f"Set {total_changes} of {num_entries} wrong 0 delays to an interpolated value.")
+
 # Remove entries from the df that don't have the same delay
 # for every incoming train per station, as there probably is
 # something wrong with the data point.
+initial_incoming_length = len(result_in)
 in_clean_delays = remove_unequal_delays(result_in)
+print(f"Removed {initial_incoming_length - len(result_in)} incoming trains with varying delays.")
 
 # Collapse and/or clean up lists
 in_clean_delays.loc[:, 'delay'] = in_clean_delays.loc[:, 'delay'] \
@@ -216,15 +251,12 @@ merged = pd.merge(in_clean, out_clean, on=['date', 'train'], how='outer',
 condition = (
         pd.isna(merged['arrival_in']) |
         pd.isna(merged['departure_out']) |
-        ((merged['arrival_in'] <= merged['departure_out']) &
+        ((merged['arrival_in'] <= merged['departure_out']) &    # drop wrongly merged trains
          (merged['arrival_in'] > merged['departure_out'] - timedelta(minutes=60))
          )
         )
 merged = merged[condition]
 
-# TODO
-# Somehow ~5000 incoming trains and ~1800 outgoing trains are missing after this.
-# What happened to them?
 incoming = merged.loc[merged.loc[:, 'in_id'].notna()]
 outgoing = merged.loc[merged.loc[:, 'out_id'].notna()]
 incoming = incoming.loc[:, ['in_id', 'train', 'date', 'arrival_in',
@@ -250,8 +282,11 @@ incoming['in_id'] = incoming.loc[:, 'in_id'].apply(d_id_to_int).astype(int)
 outgoing['out_id'] = outgoing.loc[:, 'out_id'].apply(d_id_to_int).astype(int)
 outgoing['in_id'] = outgoing.loc[:, 'in_id'].apply(d_id_to_int).astype(int)
 
-incoming = add_directions(incoming, True)
-outgoing = add_directions(outgoing, False)
+print(f"Removed {len_in - len(incoming)} wrongly merged incoming trains.")
+print(f"Removed {len_out - len(outgoing)} wrongly merged incoming trains.")
 
-#incoming.to_pickle("data/incoming.pkl")
-#outgoing.to_pickle("data/outgoing.pkl")
+incoming = add_directions(incoming, True, debug=False)
+outgoing = add_directions(outgoing, False, debug=False)
+
+incoming.to_pickle("data/incoming.pkl")
+outgoing.to_pickle("data/outgoing.pkl")
