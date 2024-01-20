@@ -56,13 +56,6 @@ def format_datetimes(df):
     df.loc[:, 'date'] = df.loc[:, 'departure'].apply(lambda d: d.date())
 
 
-def format_station_name_file(station):
-    return station.replace(" ", "_") \
-            .replace("(", "PARO") \
-            .replace(")", "PARC") \
-            .replace("/", "SLASH")
-
-
 def all_equal(lst):
     return len(set(lst)) == 1
 
@@ -91,7 +84,31 @@ def d_id_to_int(d):
         return int(d)
 
 
-def add_directions(train_data, is_incoming):
+def fix_delays(row):
+    change_count = 0
+    delays = row['delay']
+    old_delays = delays.copy()
+    #departures = row['departure']
+    arrivals = row['arrival']
+    
+    for i in range(1, len(delays)):
+        # Calculate time difference in minutes
+        time_diff_minutes = (arrivals[i] - arrivals[i-1]).total_seconds() / 60
+        threshold = 0.2 * time_diff_minutes
+        
+        if delays[i-1] > 10 and delays[i] == 0 and delays[i-1] - delays[i] > threshold:
+            if i < len(delays) - 1:
+                delays[i] = (delays[i-1] + delays[i+1]) // 2
+            else:
+                delays[i] = delays[i-1]
+            change_count += 1
+    if change_count > 0:
+        #print(f"{old_delays} -> {delays}")
+        pass
+    return delays, change_count
+
+
+def add_directions(train_data, is_incoming, debug=False):
 
     direction_list = [""] * len(train_data)
     directions = {'South': ['Weinheim(Bergstr)Hbf', 'Bruchsal', 'Karlsruhe-Durlach', 'Günzburg', 'Bensheim', 'Mannheim Hbf', 'Stuttgart Hbf', 'Karlsruhe Hbf', 'Kaiserslautern Hbf', 'Saarbrücken Hbf',
@@ -102,68 +119,65 @@ def add_directions(train_data, is_incoming):
               'North East': ['Weißenfels', 'Wittenberge', 'Naumburg(Saale)Hbf', 'Stendal Hbf', 'Halle(Saale)Hbf', 'Bitterfeld', 'Berlin Ostbahnhof','Berlin Südkreuz', 'Dresden-Neustadt', 'Wolfsburg Hbf', 'Eisenach', 'Dresden Hbf', 'Berlin-Spandau', 'Lutherstadt Wittenberg Hbf', 'Riesa', 'Hildesheim Hbf', 'Berlin Hbf', 'Braunschweig Hbf', 'Erfurt Hbf', 'Leipzig Hbf',
                              'Brandenburg Hbf', 'Magdeburg Hbf', 'Berlin Gesundbrunnen'],
               'East': ['München-Pasing', 'München Hbf', 'Augsburg Hbf', 'Plattling', 'Aschaffenburg Hbf', 'Passau Hbf', 'Nürnberg Hbf', 'Würzburg Hbf', 'Regensburg Hbf', 'Ingolstadt Hbf']}
-    not_found = 0
-    found = 0
-    airport = 0
-    index = 0
-    remove_impossible_indices = -1
+    
+    direction_list = [""] * len(train_data)
+    remove_indices = set()
+    not_found = found = airport = count_impossible = 0
 
-    for train_out in train_data.itertuples():
-        found_direction = False
-
+    for index, train_out in enumerate(train_data.itertuples()):
+        direction_set = set()
+        
         if is_incoming:
-            stops = train_out.origin
+            stops = list(train_out.origin)
             stops.reverse()
         else:
-            stops = train_out.destination
-
-        # TODO check for impossible schedules in general? How?
-        if 'Stuttgart Hbf' in stops and 'Berlin Hbf' in stops:
-            remove_impossible_indices = index
+            stops = list(train_out.destination)
 
         for dest in stops:
-            if dest in directions['South']:
-                found += 1
-                found_direction = True
-                direction_list[index] = 'South'
-                break
-            elif dest in directions['West']:
-                found += 1
-                found_direction = True
-                direction_list[index] = 'West'
-                break
-            elif dest in directions['North']:
-                found += 1
-                found_direction = True
-                direction_list[index] = 'North'
-                break
-            elif dest in directions['North East']:
-                found += 1
-                found_direction = True
-                direction_list[index] = 'North East'
-                break
-            elif dest in directions['East']:
-                found += 1
-                found_direction = True
-                direction_list[index] = 'East'
-                break
-        if not found_direction:
-            not_found += 1
-            direction_list[index] = 'None'
-            for dest in train_out.destination:
-                if dest in ['Frankfurt am Main Flughafen Fernbahnhof']:
-                    airport += 1
+            for direction, stations in directions.items():
+                if dest in stations:
+                    direction_set.add(direction)
                     break
-        index += 1
+
+        if debug:
+            if "South" in direction_set and ("West" in direction_set or "North" in direction_set or "North East" in direction_set):
+                print(stops)
+                count_impossible += 1
+                print(index)
+            if "East" in direction_set and ("West" in direction_set or "North" in direction_set):
+                print(stops)
+                print(train_out.departure)
+                print(train_out.arrival)
+                count_impossible += 1
+                print(index)
+                continue
+
+        direction_list[index] = next(iter(direction_set), 'None')
+        if direction_list[index] == 'None':
+            not_found += 1
+            if 'Frankfurt am Main Flughafen Fernbahnhof' in stops:
+                airport += 1
+        else:
+            found += 1
 
     train_data['direction'] = direction_list
 
-    print(f"Set directions of {found} trains.")
-    print(f"Did not find clear direction of {not_found} trains.")
+    
+    # Remove indices found while debugging
     if is_incoming:
-        print(f"Out of those, {airport} trains start at Frankfurt airport without other stops.")
+        remove_indices.update([35371, 35372, 88424])
     else:
+        remove_indices.update([125187, 125225, 153510, 153822])
+    train_data = train_data.drop(index=remove_indices)
+
+    if debug:
+        print(count_impossible)
+    if is_incoming:
+        print(f"Set directions of {found} incoming trains.")
+        print(f"Did not find clear direction of {not_found} trains.")
         print(f"Out of those, {airport} trains end at Frankfurt airport without other stops.")
-    if remove_impossible_indices >= 0:
-        train_data = train_data[train_data.index != remove_impossible_indices]
+    else:
+        print(f"Set directions of {found} outgoing trains.")
+        print(f"Did not find clear direction of {not_found} trains.")
+        print(f"Out of those, {airport} trains start at Frankfurt airport without other stops.")
     return train_data

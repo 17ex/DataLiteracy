@@ -17,6 +17,9 @@ data_out = pd.read_csv(INPUT_DIR + "scraped_outgoing_Frankfurt_Hbf.csv",
                        names=['origin', 'destination', 'date', 'departure',
                               'arrival', 'train', 'delay', 'cancellation'])
 
+print(f"Number of incoming datapoints: {len(data_in)}")
+print(f"Number of outgoing datapoints: {len(data_out)}")
+
 format_datetimes(data_in)
 format_datetimes(data_out)
 
@@ -31,10 +34,25 @@ result_out = data_out.groupby(['train', 'date', 'departure', 'origin'])[
         ['destination', 'arrival', 'delay', 'cancellation']
         ].agg(list_agg).reset_index()
 
+
+# Set wrongly as 0 given delays to an interpolation
+changes = result_out.apply(fix_delays, axis=1)
+result_out['delay'] = changes.apply(lambda x: x[0])
+total_changes = changes.apply(lambda x: x[1]).sum()
+
+# Count total entries
+num_entries = 0
+for delay_list in result_out["delay"]:
+    num_entries += len(delay_list)
+
+print(f"Set {total_changes} of {num_entries} wrong 0 delays to an interpolated value.")
+
 # Remove entries from the df that don't have the same delay
 # for every incoming train per station, as there probably is
 # something wrong with the data point.
+initial_incoming_length = len(result_in)
 in_clean_delays = remove_unequal_delays(result_in)
+print(f"Removed {initial_incoming_length - len(result_in)} incoming trains with varying delays.")
 
 # Collapse and/or clean up lists
 in_clean_delays.loc[:, 'delay'] = in_clean_delays.loc[:, 'delay'] \
@@ -61,15 +79,12 @@ merged = pd.merge(in_clean, out_clean, on=['date', 'train'], how='outer',
 condition = (
         pd.isna(merged['arrival_in']) |
         pd.isna(merged['departure_out']) |
-        ((merged['arrival_in'] <= merged['departure_out']) &
+        ((merged['arrival_in'] <= merged['departure_out']) &    # drop wrongly merged trains
          (merged['arrival_in'] > merged['departure_out'] - timedelta(minutes=60))
          )
         )
 merged = merged[condition]
 
-# TODO
-# Somehow ~5000 incoming trains and ~1800 outgoing trains are missing after this.
-# What happened to them?
 incoming = merged.loc[merged.loc[:, 'in_id'].notna()]
 outgoing = merged.loc[merged.loc[:, 'out_id'].notna()]
 incoming = incoming.loc[:, ['in_id', 'train', 'date', 'arrival_in',
@@ -95,8 +110,11 @@ incoming['in_id'] = incoming.loc[:, 'in_id'].apply(d_id_to_int).astype(int)
 outgoing['out_id'] = outgoing.loc[:, 'out_id'].apply(d_id_to_int).astype(int)
 outgoing['in_id'] = outgoing.loc[:, 'in_id'].apply(d_id_to_int).astype(int)
 
-incoming = add_directions(incoming, True)
-outgoing = add_directions(outgoing, False)
+print(f"Removed {len_in - len(incoming)} wrongly merged incoming trains.")
+print(f"Removed {len_out - len(outgoing)} wrongly merged incoming trains.")
+
+incoming = add_directions(incoming, True, debug=False)
+outgoing = add_directions(outgoing, False, debug=False)
 
 incoming.to_pickle(OUTPUT_DIR + "incoming.pkl")
 outgoing.to_pickle(OUTPUT_DIR + "outgoing.pkl")
