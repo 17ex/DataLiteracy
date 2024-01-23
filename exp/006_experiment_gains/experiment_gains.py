@@ -11,7 +11,11 @@ from src.data_preprocessing.preprocessing_funs import format_station_name_file
 import src.analysis_functions.general_functions as general
 import src.analysis_functions.exact_stop_functions as exact_stop
 
-station_subset = ['Essen Hbf', 'Leipzig Hbf', 'Magdeburg Hbf', 'Hamburg Hbf', 'Kiel Hbf', 'Stuttgart Hbf', 'Potsdam Hbf'
+station_subset_in = ['Essen Hbf', 'Leipzig Hbf', 'Magdeburg Hbf', 'Hamburg Hbf', 'Kiel Hbf', 'Stuttgart Hbf', 'Potsdam Hbf'
+    , 'Berlin Hbf', 'Erfurt Hbf', 'Hannover Hbf', 'Köln Hbf', 'Schwerin Hbf', 'München Hbf', 'Düsseldorf Hbf'
+    , 'Duisburg Hbf', 'Dresden Hbf', 'Mainz Hbf', 'Bremen Hbf', 'Saarbrücken Hbf', 'Dortmund Hbf', 'Karlsruhe Hbf'
+    , 'Nürnberg Hbf', 'Wiesbaden Hbf', 'Köln Hbf']
+station_subset_out = ['Essen Hbf', 'Leipzig Hbf', 'Magdeburg Hbf', 'Hamburg Hbf', 'Kiel Hbf', 'Stuttgart Hbf', 'Potsdam Hbf'
     , 'Berlin Hbf', 'Erfurt Hbf', 'Hannover Hbf', 'Köln Hbf', 'Schwerin Hbf', 'München Hbf', 'Düsseldorf Hbf'
     , 'Duisburg Hbf', 'Dresden Hbf', 'Mainz Hbf', 'Bremen Hbf', 'Saarbrücken Hbf', 'Dortmund Hbf', 'Karlsruhe Hbf'
     , 'Nürnberg Hbf', 'Wiesbaden Hbf', 'Köln Hbf']
@@ -60,7 +64,7 @@ unique_stations_in.remove('Frankfurt(Main)Hbf')
 unique_stations_out.remove('Frankfurt(Main)Hbf')
 
 for origin in unique_stations_in:
-    if origin not in station_subset:
+    if origin not in station_subset_in:
         continue
     # do some pre-calculations for the incoming list
     incoming_from_origin = incoming[incoming['origin'].apply(lambda x: any(origin == value for value in x))]
@@ -75,7 +79,7 @@ for origin in unique_stations_in:
     delay_all_theoretical_max_gain = {}
     print(origin)
     for destination in unique_stations_out:
-        if destination not in station_subset:
+        if destination not in station_subset_out:
             continue
         if origin == destination:
             continue
