@@ -94,7 +94,7 @@ def fix_delays(row):
     for i in range(1, len(delays)):
         # Calculate time difference in minutes
         time_diff_minutes = (arrivals[i] - arrivals[i-1]).total_seconds() / 60
-        threshold = 0.2 * time_diff_minutes
+        threshold = 0.27 * time_diff_minutes
         
         if delays[i-1] > 10 and delays[i] == 0 and delays[i-1] - delays[i] > threshold:
             if i < len(delays) - 1:
