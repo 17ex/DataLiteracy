@@ -11,3 +11,15 @@ Results:
 - connections that perform worse than others?
 - which connections are good to take? network?
 - change in Time over the years?
+
+
+
+Aussage über Einzelne Verbindungen:
+Geoplot von Stuttgart bis woanders, Colorgrade on Map
+anstatt
+
+PLOTS:
+Delays
+Gains
+Heatmap für alle verbindungen von Subset
+
