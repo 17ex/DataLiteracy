@@ -181,3 +181,9 @@ def add_directions(train_data, is_incoming, debug=False):
         print(f"Did not find clear direction of {not_found} trains.")
         print(f"Out of those, {airport} trains start at Frankfurt airport without other stops.")
     return train_data
+
+
+def format_station_name_file(input_string):
+    output_string = input_string.replace('ä', 'ae').replace('ö', 'oe').replace('ü', 'ue')
+    output_string = output_string.replace('/', '-')
+    return output_string
