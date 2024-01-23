@@ -1,5 +1,7 @@
 from src.analysis_functions.general_functions import can_take_connecting_train, get_plan_and_delay_difference
 import pandas as pd
+from datetime import datetime, time, timedelta
+
 
 def find_next_train(train, next_train_candidates, gains={}, estimated_gain=0.0, worst_case=False):
     """
@@ -33,6 +35,25 @@ def find_next_train(train, next_train_candidates, gains={}, estimated_gain=0.0, 
     return None, 0, 0
 
 
+def add_columns(candidate_transfers, destination):
+    candidate_transfers.loc[:, 'destination_idx'] = \
+            candidate_transfers['destination_y'] \
+            .apply(lambda destinations: destinations.index(destination))
+    candidate_transfers['arrival_destination'] = candidate_transfers.apply(
+        lambda tp: tp['arrival_y'][tp['destination_idx']], axis=1)
+    candidate_transfers['arrival_next_stop'] = candidate_transfers['arrival_y'] \
+        .apply(lambda arrival_lst: arrival_lst[0])
+    candidate_transfers['cancellation_inbound'] = candidate_transfers.apply(
+        lambda tp: tp['cancellation_x'][-1] != 0 \
+                   | tp['cancellation_x'][tp['origin_idx']] != 0,
+        axis=1
+    )
+    candidate_transfers['cancellation_outbound'] = candidate_transfers.apply(
+        lambda tp: tp['cancellation_y'][tp['destination_idx']] != 0,
+        axis=1
+    )
+    return candidate_transfers
+
 def reachable_transfers(incoming_from_origin, outgoing, origin, destination, gains={}, max_hours=4, estimated_gain=0.0, worst_case=False):
     """
     Identifies reachable transfers between incoming and outgoing trains.
@@ -49,7 +70,6 @@ def reachable_transfers(incoming_from_origin, outgoing, origin, destination, gai
     - delay (dict): Average delay information for each plan difference.
     """
     max_delay_minutes = max_hours * 60
-    threshold_time = (pd.to_datetime('0:00:00') - pd.to_timedelta(max_hours, unit='h')).time()
     delay = {'switch time': [], 'date': [], 'delay': [], 'reachable': []}
     outgoing_to_dest = outgoing[
             outgoing['destination']
@@ -62,15 +82,16 @@ def reachable_transfers(incoming_from_origin, outgoing, origin, destination, gai
                                                      on='date')
     candidate_transfers.dropna(subset='origin_idx', inplace=True)
     candidate_transfers['origin_idx'] = candidate_transfers['origin_idx'].astype(int)
-    # Filter out trains that go from origin to destination directly,
-    # as there is no train transfer in that case.
-    candidate_transfers = candidate_transfers[
-            candidate_transfers['in_id_x'] != candidate_transfers['in_id_y']]
     # Time between the arrival of the first train at Frankfurt and
     # the departure of the second train
     candidate_transfers['transfer_time'] = \
         (candidate_transfers['departure_y']
          - candidate_transfers['arrival_x']).dt.total_seconds() / 60
+    print(len(incoming_from_origin), len(candidate_transfers['in_id_x'].unique()))
+    # Filter out trains that go from origin to destination directly,
+    # as there is no train transfer in that case.
+    candidate_transfers = candidate_transfers[
+            candidate_transfers['in_id_x'] != candidate_transfers['in_id_y']]
     # Filter out trains that one can not transfer to, because they departed
     # before the incoming train arrived, or because it would take too long
     # (Restriction: may not take longer than max_hours)
@@ -79,25 +100,7 @@ def reachable_transfers(incoming_from_origin, outgoing, origin, destination, gai
             (candidate_transfers['transfer_time'] <= max_delay_minutes)]
     if candidate_transfers.empty:
         return delay
-    candidate_transfers.loc[:, 'destination_idx'] = \
-            candidate_transfers['destination_y'] \
-            .apply(lambda destinations: destinations.index(destination))
-
-    # Store important arrival times separately
-    # TODO probably move the below code to preprocessing
-    candidate_transfers['arrival_destination'] = candidate_transfers.apply(
-            lambda tp: tp['arrival_y'][tp['destination_idx']], axis=1)
-    candidate_transfers['arrival_next_stop'] = candidate_transfers['arrival_y'] \
-            .apply(lambda arrival_lst: arrival_lst[0])
-    candidate_transfers['cancellation_inbound'] = candidate_transfers.apply(
-            lambda tp: tp['cancellation_x'][-1] != 0 \
-                    | tp['cancellation_x'][tp['origin_idx']] != 0,
-            axis=1
-            )
-    candidate_transfers['cancellation_outbound'] = candidate_transfers.apply(
-            lambda tp: tp['cancellation_y'][tp['destination_idx']] != 0,
-            axis=1
-            )
+    candidate_transfers = add_columns(candidate_transfers, destination)
     num_discarded = 0
     unique_ids = candidate_transfers['in_id_x'].unique()
     # Counters for a quick sanity check. Not used further in the analysis.
@@ -113,7 +116,8 @@ def reachable_transfers(incoming_from_origin, outgoing, origin, destination, gai
                 candidate_transfers['date'] == example_train['date']]
         for train in group_id.itertuples():
             # filter out trains for which we can't find next trains as we merge on the date
-            if train.transfer_time > 60 or train.departure_y.time() > threshold_time:
+            # or train.departure_y.time() > threshold_time
+            if train.transfer_time > 60:
                 num_discarded += 1
                 continue
             dest_idx = train.destination_idx
@@ -160,8 +164,32 @@ def reachable_transfers(incoming_from_origin, outgoing, origin, destination, gai
                     num_found_alternative_from_frankfurt += 1
                     delay['delay'].append(next_train.delay_y[dest_idx] + extra_delay)
                 else:
-                    num_not_found_alternative_from_frankfurt += 1
-                    delay['delay'].append(max_delay_minutes - train.transfer_time)
+                    if train.arrival_x.time() > time(24 - max_hours, 0, 0):
+                        df1 = incoming_from_origin[incoming_from_origin['in_id'] == train.in_id_x]
+                        df2 = outgoing_to_dest[outgoing_to_dest['date'] == train.date + timedelta(days=1)]
+                        candidate_transfers_next_day = df1.merge(df2, how='cross')
+                        if not candidate_transfers_next_day.empty:
+                            candidate_transfers_next_day = add_columns(candidate_transfers_next_day, destination)
+                            candidate_transfers_next_day['transfer_time'] = \
+                                (candidate_transfers_next_day['departure_y']
+                                 - candidate_transfers_next_day['arrival_x']).dt.total_seconds() / 60
+                            candidate_transfers_next_day = candidate_transfers_next_day[
+                                candidate_transfers_next_day['transfer_time'] <= max_delay_minutes]
+                            next_train, extra_delay, dest_idx = find_next_train(train, candidate_transfers_next_day, gains, estimated_gain, worst_case)
+                            if next_train is not None:
+                                num_found_alternative_from_frankfurt += 1
+                                delay['delay'].append(next_train.delay_y[dest_idx] + extra_delay)
+                                # print(next_train.arrival_x, next_train.departure_y)
+                            else:
+                                # print('No next', train.arrival_x, len(df2))
+                                num_not_found_alternative_from_frankfurt += 1
+                                delay['delay'].append(max_delay_minutes - train.transfer_time)
+                        else:
+                            num_not_found_alternative_from_frankfurt += 1
+                            delay['delay'].append(max_delay_minutes - train.transfer_time)
+                    else:
+                        num_not_found_alternative_from_frankfurt += 1
+                        delay['delay'].append(max_delay_minutes - train.transfer_time)
             else:
                 # If it was possible to take the connecting train as planned
                 delay['reachable'].append(3)
