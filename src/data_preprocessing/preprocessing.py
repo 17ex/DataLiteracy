@@ -35,7 +35,8 @@ result_out = data_out.groupby(['train', 'date', 'departure', 'origin'])[
         ].agg(list_agg).reset_index()
 
 
-# Set wrongly as 0 given delays to an interpolation
+# Interpolate delays for data points with 0 delay
+# when it is definitely an error in the data.
 changes = result_out.apply(fix_delays, axis=1)
 result_out['delay'] = changes.apply(lambda x: x[0])
 total_changes = changes.apply(lambda x: x[1]).sum()
