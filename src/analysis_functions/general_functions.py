@@ -39,25 +39,9 @@ def find_gains_per_next_stop(incoming, outgoing):
         departure_delay = max(0, delay_in - planned_transfer_time)
         gain = departure_delay - delay_out
 
-        # Handling cases where gain exceeds a threshold of 10% of the time the train takes
-        if gain > 0.1 * driving_time:
-            delays = train_pair.delay_y
-            delay_out = -1
-            # adjust for the errors in the data where large delays go to 0 and then back up to the actual delay
-            for j in range(len(delays)):
-                if delays[j] != 0:
-                    delay_out = delays[j]
-                    destination = train_pair.destination_y[j]
-                    break
-            if delay_out != -1:
-                gain = departure_delay - delay_out
-            else:
-                gain = 0
-            # TODO
-            # does this continue here make sense?
-            # we don't use the information above then.
+        # Handling cases where gain exceeds a threshold of 27% of the time the train takes
+        if gain > 0.27 * driving_time:
             continue
-
         if destination not in gains.keys():
             gains[destination] = [gain]
         else:
@@ -114,10 +98,8 @@ def get_plan_and_delay_difference(train_pair, gains={}, estimated_gain=0.0, wors
             potential_gain = 0
         out_delay = max(0, delay_at_next_stop + potential_gain)
     else:
-        # TODO
-        # what should this line do?
-        estimated_gain * (arrival_at_next_stop - departure_FRA).total_seconds() / 60
-        out_delay = max(0, delay_at_next_stop + estimated_gain)
+        gain = estimated_gain * (arrival_at_next_stop - departure_FRA).total_seconds() / 60
+        out_delay = max(0, delay_at_next_stop + gain)
     return plan_difference, max(0, in_delay - out_delay)
 
 

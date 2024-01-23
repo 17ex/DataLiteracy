@@ -1,4 +1,5 @@
 from src.analysis_functions.general_functions import can_take_connecting_train, get_plan_and_delay_difference
+import pandas as pd
 
 def find_next_train(train, next_train_candidates, gains={}, estimated_gain=0.0, worst_case=False):
     """
@@ -17,14 +18,9 @@ def find_next_train(train, next_train_candidates, gains={}, estimated_gain=0.0, 
     """
     dest_idx = train.destination_idx
     plan_arrival = train.arrival_destination
-    # only look at trains that arrive later at the destination
-    # TODO verify whether we should keep the restriction/simplification
-    # arrival_destination > plan_arrival
-    # or if it hurts us. Should not hurt performance much to remove
     next_train_candidates = next_train_candidates[
             ~next_train_candidates['cancellation_inbound']
             & ~next_train_candidates['cancellation_outbound']
-            & (next_train_candidates['arrival_destination'] > plan_arrival)
             ].sort_values(by=['arrival_destination'])
     while not next_train_candidates.empty:
         next_train = next_train_candidates.iloc[0]
@@ -37,7 +33,7 @@ def find_next_train(train, next_train_candidates, gains={}, estimated_gain=0.0, 
     return None, 0, 0
 
 
-def reachable_transfers(incoming_from_origin, outgoing, origin, destination, gains={}, max_hours=3, estimated_gain=0.0, worst_case=False):
+def reachable_transfers(incoming_from_origin, outgoing, origin, destination, gains={}, max_hours=4, estimated_gain=0.0, worst_case=False):
     """
     Identifies reachable transfers between incoming and outgoing trains.
 
@@ -53,6 +49,7 @@ def reachable_transfers(incoming_from_origin, outgoing, origin, destination, gai
     - delay (dict): Average delay information for each plan difference.
     """
     max_delay_minutes = max_hours * 60
+    threshold_time = (pd.to_datetime('0:00:00') - pd.to_timedelta(max_hours, unit='h')).time()
     delay = {'switch time': [], 'date': [], 'delay': [], 'reachable': []}
     outgoing_to_dest = outgoing[
             outgoing['destination']
@@ -85,6 +82,7 @@ def reachable_transfers(incoming_from_origin, outgoing, origin, destination, gai
     candidate_transfers.loc[:, 'destination_idx'] = \
             candidate_transfers['destination_y'] \
             .apply(lambda destinations: destinations.index(destination))
+
     # Store important arrival times separately
     # TODO probably move the below code to preprocessing
     candidate_transfers['arrival_destination'] = candidate_transfers.apply(
@@ -100,8 +98,6 @@ def reachable_transfers(incoming_from_origin, outgoing, origin, destination, gai
             lambda tp: tp['cancellation_y'][tp['destination_idx']] != 0,
             axis=1
             )
-    # TODO above, figure out which combinations are gonna be a problem when looking for transfers over 12pm.
-    # probably only trains that started after 12pm
     num_discarded = 0
     unique_ids = candidate_transfers['in_id_x'].unique()
     # Counters for a quick sanity check. Not used further in the analysis.
@@ -116,7 +112,8 @@ def reachable_transfers(incoming_from_origin, outgoing, origin, destination, gai
         group_date = candidate_transfers[
                 candidate_transfers['date'] == example_train['date']]
         for train in group_id.itertuples():
-            if train.transfer_time > 60:
+            # filter out trains for which we can't find next trains as we merge on the date
+            if train.transfer_time > 60 or train.departure_y.time() > threshold_time:
                 num_discarded += 1
                 continue
             dest_idx = train.destination_idx
@@ -147,7 +144,7 @@ def reachable_transfers(incoming_from_origin, outgoing, origin, destination, gai
                     delay['delay'].append(next_train.delay_y[dest_idx] + extra_delay)
                 else:
                     num_not_found_alternative_to_frankfurt += 1
-                    delay['delay'].append(max_delay_minutes)
+                    delay['delay'].append(max_delay_minutes - train.transfer_time)
             elif train.cancellation_outbound or plan_difference <= delay_difference:
                 # If the departing train was cancelled or transfer to it is impossible
                 delay['reachable'].append(2)
@@ -164,7 +161,7 @@ def reachable_transfers(incoming_from_origin, outgoing, origin, destination, gai
                     delay['delay'].append(next_train.delay_y[dest_idx] + extra_delay)
                 else:
                     num_not_found_alternative_from_frankfurt += 1
-                    delay['delay'].append(max_delay_minutes)
+                    delay['delay'].append(max_delay_minutes - train.transfer_time)
             else:
                 # If it was possible to take the connecting train as planned
                 delay['reachable'].append(3)
