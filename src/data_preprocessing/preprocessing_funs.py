@@ -2,7 +2,8 @@ import pandas as pd
 from datetime import timedelta
 from datetime import datetime
 import numpy as np
-
+from pathlib import Path
+import math
 
 def min_time_diff(group):
     min_diff = float('inf')  # Set an initial maximum value for minimum difference
@@ -90,12 +91,12 @@ def fix_delays(row):
     old_delays = delays.copy()
     #departures = row['departure']
     arrivals = row['arrival']
-    
+
     for i in range(1, len(delays)):
         # Calculate time difference in minutes
         time_diff_minutes = (arrivals[i] - arrivals[i-1]).total_seconds() / 60
-        threshold = 0.2 * time_diff_minutes
-        
+        threshold = 0.27 * time_diff_minutes
+
         if delays[i-1] > 10 and delays[i] == 0 and delays[i-1] - delays[i] > threshold:
             if i < len(delays) - 1:
                 delays[i] = (delays[i-1] + delays[i+1]) // 2
@@ -119,14 +120,14 @@ def add_directions(train_data, is_incoming, debug=False):
               'North East': ['Weißenfels', 'Wittenberge', 'Naumburg(Saale)Hbf', 'Stendal Hbf', 'Halle(Saale)Hbf', 'Bitterfeld', 'Berlin Ostbahnhof','Berlin Südkreuz', 'Dresden-Neustadt', 'Wolfsburg Hbf', 'Eisenach', 'Dresden Hbf', 'Berlin-Spandau', 'Lutherstadt Wittenberg Hbf', 'Riesa', 'Hildesheim Hbf', 'Berlin Hbf', 'Braunschweig Hbf', 'Erfurt Hbf', 'Leipzig Hbf',
                              'Brandenburg Hbf', 'Magdeburg Hbf', 'Berlin Gesundbrunnen'],
               'East': ['München-Pasing', 'München Hbf', 'Augsburg Hbf', 'Plattling', 'Aschaffenburg Hbf', 'Passau Hbf', 'Nürnberg Hbf', 'Würzburg Hbf', 'Regensburg Hbf', 'Ingolstadt Hbf']}
-    
+
     direction_list = [""] * len(train_data)
     remove_indices = set()
     not_found = found = airport = count_impossible = 0
 
     for index, train_out in enumerate(train_data.itertuples()):
         direction_set = set()
-        
+
         if is_incoming:
             stops = list(train_out.origin)
             stops.reverse()
@@ -162,7 +163,7 @@ def add_directions(train_data, is_incoming, debug=False):
 
     train_data['direction'] = direction_list
 
-    
+
     # Remove indices found while debugging
     if is_incoming:
         remove_indices.update([35371, 35372, 88424])
@@ -182,111 +183,84 @@ def add_directions(train_data, is_incoming, debug=False):
         print(f"Out of those, {airport} trains start at Frankfurt airport without other stops.")
     return train_data
 
-data_in = pd.read_csv("data/scraped_incoming_Frankfurt_Hbf.csv",
-                      names=['origin', 'destination', 'date', 'departure',
-                             'arrival', 'train', 'delay', 'cancellation'])
-data_out = pd.read_csv("data/scraped_outgoing_Frankfurt_Hbf.csv",
-                       names=['origin', 'destination', 'date', 'departure',
-                              'arrival', 'train', 'delay', 'cancellation'])
 
-print(f"Number of incoming datapoints: {len(data_in)}")
-print(f"Number of outgoing datapoints: {len(data_out)}")
-
-format_datetimes(data_in)
-format_datetimes(data_out)
-
-data_in = data_in.sort_values(["date", "departure"])
-data_out = data_out.sort_values(["date", "arrival"])
-
-# Use groupby with agg to apply custom aggregation function
-result_in = data_in.groupby(['train', 'date', 'arrival', 'destination'])[
-        ['origin', 'departure', 'delay', 'cancellation']
-        ].agg(list_agg).reset_index()
-result_out = data_out.groupby(['train', 'date', 'departure', 'origin'])[
-        ['destination', 'arrival', 'delay', 'cancellation']
-        ].agg(list_agg).reset_index()
+def format_station_name_file(input_string):
+    output_string = input_string.replace('ä', 'ae').replace('ö', 'oe').replace('ü', 'ue')
+    output_string = output_string.replace('/', '-')
+    return output_string
 
 
-# Set wrongly as 0 given delays to an interpolation
-changes = result_out.apply(fix_delays, axis=1)
-result_out['delay'] = changes.apply(lambda x: x[0])
-total_changes = changes.apply(lambda x: x[1]).sum()
-
-# Count total entries
-num_entries = 0
-for delay_list in result_out["delay"]:
-    num_entries += len(delay_list)
-
-print(f"Set {total_changes} of {num_entries} wrong 0 delays to an interpolated value.")
-
-# Remove entries from the df that don't have the same delay
-# for every incoming train per station, as there probably is
-# something wrong with the data point.
-initial_incoming_length = len(result_in)
-in_clean_delays = remove_unequal_delays(result_in)
-print(f"Removed {initial_incoming_length - len(result_in)} incoming trains with varying delays.")
-
-# Collapse and/or clean up lists
-in_clean_delays.loc[:, 'delay'] = in_clean_delays.loc[:, 'delay'] \
-        .apply(lambda l: l[0])
-in_clean_delays.loc[:, 'cancellation'] = \
-        in_clean_delays.loc[:, 'cancellation'].apply(cancellation_to_int_lst)
-result_out.loc[:, 'cancellation'] = \
-        result_out.loc[:, 'cancellation'].apply(cancellation_to_int_lst)
-in_clean = in_clean_delays.infer_objects()
-out_clean = result_out.infer_objects()
-
-# min_time_differences = in_clean.groupby(['date', 'train']).apply(min_time_diff)
-# print(min(min_time_differences))
-
-len_in = len(in_clean)
-len_out = len(out_clean)
-in_clean['in_id'] = range(0, len_in)
-out_clean['out_id'] = range(len_in, len_in + len_out)
-
-merged = pd.merge(in_clean, out_clean, on=['date', 'train'], how='outer',
-                  suffixes=['_in', '_out'])
+def unique_station_names(data_in, data_out):
+    incoming_stations = set(data_in["origin"])
+    outgoing_stations = set(data_out["destination"])
+    stations = incoming_stations.union(outgoing_stations)
+    # Rename a few stations
+    stations.add("Frankfurt(Main)Hbf")
+    stations.add("Frankfurt(M) Flughafen Fernbf")
+    stations.add("Stendal")
+    stations.add("Hamm(Westf)")
+    stations.remove('Hamm(Westf)Hbf')
+    stations.remove('Frankfurt am Main Flughafen Fernbahnhof')
+    stations.remove('Stendal Hbf')
+    return stations
 
 
-condition = (
-        pd.isna(merged['arrival_in']) |
-        pd.isna(merged['departure_out']) |
-        ((merged['arrival_in'] <= merged['departure_out']) &    # drop wrongly merged trains
-         (merged['arrival_in'] > merged['departure_out'] - timedelta(minutes=60))
-         )
-        )
-merged = merged[condition]
+def haversine(coord1, coord2):
+    # Radius of the Earth in km
+    R = 6371.0
+    lat1, lon1 = coord1
+    lat2, lon2 = coord2
+    lat1 = float(lat1.replace(',', '.'))
+    lon1 = float(lon1.replace(',', '.'))
+    lat2 = float(lat2.replace(',', '.'))
+    lon2 = float(lon2.replace(',', '.'))
+    # Convert latitude and longitude from degrees to radians
+    phi1, phi2 = math.radians(lat1), math.radians(lat2)
+    delta_phi = math.radians(lat2 - lat1)
+    delta_lambda = math.radians(lon2 - lon1)
+    # Haversine formula
+    a = math.sin(delta_phi / 2)**2 + math.cos(phi1) * math.cos(phi2) * math.sin(delta_lambda / 2)**2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    # Distance in kilometers
+    distance = R * c
+    return distance
 
-incoming = merged.loc[merged.loc[:, 'in_id'].notna()]
-outgoing = merged.loc[merged.loc[:, 'out_id'].notna()]
-incoming = incoming.loc[:, ['in_id', 'train', 'date', 'arrival_in',
-                            'destination_in', 'origin_in', 'departure_in',
-                            'delay_in', 'cancellation_in', 'out_id']]
-outgoing = outgoing.loc[:, ['out_id', 'train', 'date', 'arrival_out',
-                            'destination_out', 'origin_out', 'departure_out',
-                            'delay_out', 'cancellation_out', 'in_id']]
-incoming = incoming.rename(columns={'arrival_in': 'arrival',
-                                    'destination_in': 'destination',
-                                    'origin_in': 'origin',
-                                    'departure_in': 'departure',
-                                    'delay_in': 'delay',
-                                    'cancellation_in': 'cancellation'})
-outgoing = outgoing.rename(columns={'arrival_out': 'arrival',
-                                    'destination_out': 'destination',
-                                    'origin_out': 'origin',
-                                    'departure_out': 'departure',
-                                    'delay_out': 'delay',
-                                    'cancellation_out': 'cancellation'})
-incoming['out_id'] = incoming.loc[:, 'out_id'].apply(d_id_to_int).astype(int)
-incoming['in_id'] = incoming.loc[:, 'in_id'].apply(d_id_to_int).astype(int)
-outgoing['out_id'] = outgoing.loc[:, 'out_id'].apply(d_id_to_int).astype(int)
-outgoing['in_id'] = outgoing.loc[:, 'in_id'].apply(d_id_to_int).astype(int)
 
-print(f"Removed {len_in - len(incoming)} wrongly merged incoming trains.")
-print(f"Removed {len_out - len(outgoing)} wrongly merged incoming trains.")
+def pair_exclusion_criterion(origin_coords, destination_coords, frankfurt_coords):
+    return (
+        haversine(origin_coords, destination_coords) * 1.5
+        < (haversine(frankfurt_coords, origin_coords)
+           + haversine(frankfurt_coords, destination_coords))
+    )
 
-incoming = add_directions(incoming, True, debug=False)
-outgoing = add_directions(outgoing, False, debug=False)
 
-incoming.to_pickle("data/incoming.pkl")
-outgoing.to_pickle("data/outgoing.pkl")
+def write_excluded_station_pairs(station_coords, stations, filename):
+    station_coords = station_coords[station_coords['NAME'].isin(stations)]
+    frankfurt_coords = station_coords[
+            station_coords["NAME"] == "Frankfurt(Main)Hbf"] \
+                    .iloc[0][['Laenge', 'Breite']]
+    station_pairs = station_coords.merge(station_coords, how='cross')
+
+    def exclusion_fun(coord_pair):
+        return pair_exclusion_criterion(
+                (coord_pair['Laenge_x'], coord_pair['Breite_x']),
+                (coord_pair['Laenge_y'], coord_pair['Breite_y']),
+                frankfurt_coords)
+
+    station_pairs = station_pairs[
+            station_pairs.apply(exclusion_fun, axis=1)
+            ]
+    station_pairs[['NAME_x', 'NAME_y']] \
+        .rename(columns={'NAME_x': 'origin', 'NAME_y': 'destination'}) \
+        .to_csv(filename, index=False)
+
+
+def load_excluded_pairs(data_dir):
+    """
+    Returns a set containing tuples (origin, destination)
+    of station names that should be ignored in the analysis.
+    """
+    excluded_pairs = set()
+    for _, origin, destination in pd.read_csv(data_dir + "excluded_pairs.csv").itertuples():
+        excluded_pairs.add((origin, destination))
+    return excluded_pairs

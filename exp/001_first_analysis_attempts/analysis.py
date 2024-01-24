@@ -1,7 +1,11 @@
 import pandas as pd
 import json
 import pickle
+from pathlib import Path
 
+
+DATA_DIR = "../../dat/train_data/frankfurt_hbf/"
+Path(DATA_DIR).mkdir(parents=True, exist_ok=True)
 
 def bootstrap(data, num_samples):
     resampled_data = []
@@ -98,10 +102,10 @@ def reachable_transfers(incoming, outgoing, gains={}, estimated_gain=0.0, worst_
             reachable_count[plan_difference]['reachable'] += 1
     return reachable_count
 
-with open('data/incoming.pkl', 'rb') as file:
+with open(DATA_DIR + 'incoming.pkl', 'rb') as file:
     incoming = pickle.load(file)
 
-with open('data/outgoing.pkl', 'rb') as file:
+with open(DATA_DIR + 'outgoing.pkl', 'rb') as file:
     outgoing = pickle.load(file)
 
 num_bootstrap_samples = 0  # Number of bootstrap samples
@@ -129,26 +133,26 @@ reachable_count_max_gain = reachable_transfers(incoming, outgoing, gains=gains)
 reachable_count_avg_gain = reachable_transfers(incoming, outgoing, gains=average_gain)
 reachable_count_worst_case = reachable_transfers(incoming, outgoing, worst_case=True)
 
-with open('data/reachable/reach_worst_case.json', 'w') as file:
+with open(DATA_DIR + 'reachable/reach_worst_case.json', 'w') as file:
     json.dump(reachable_count_worst_case, file)
 
-with open('data/reachable/reach_0_gain.json', 'w') as file:
+with open(DATA_DIR + 'reachable/reach_0_gain.json', 'w') as file:
     json.dump(reachable_count_0_gain, file)
 
-with open('data/reachable/reach_max_gain.json', 'w') as file:
+with open(DATA_DIR + 'reachable/reach_max_gain.json', 'w') as file:
     json.dump(reachable_count_max_gain, file)
 
-with open('data/reachable/reach_avg_gain.json', 'w') as file:
+with open(DATA_DIR + 'reachable/reach_avg_gain.json', 'w') as file:
     json.dump(reachable_count_avg_gain, file)
 
-with open('data/reachable/bootstrap/reach_avg_gain.json', 'w') as file:
+with open(DATA_DIR + 'reachable/bootstrap/reach_avg_gain.json', 'w') as file:
     json.dump(bootstrapped_avg_gain, file)
 
-with open('data/reachable/bootstrap/reach_0_gain.json', 'w') as file:
+with open(DATA_DIR + 'reachable/bootstrap/reach_0_gain.json', 'w') as file:
     json.dump(bootstrapped_0_gain, file)
 
-with open('data/reachable/bootstrap/reach_max_gain.json', 'w') as file:
+with open(DATA_DIR + 'reachable/bootstrap/reach_max_gain.json', 'w') as file:
     json.dump(bootstrapped_max_gain, file)
 
-with open('data/reachable/bootstrap/reach_worst_case.json', 'w') as file:
+with open(DATA_DIR + 'reachable/bootstrap/reach_worst_case.json', 'w') as file:
     json.dump(bootstrapped_worst_case, file)

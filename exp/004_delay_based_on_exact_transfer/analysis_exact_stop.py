@@ -5,6 +5,7 @@ import json
 import timeit
 import pickle
 import sys
+from pathlib import Path
 
 """
 This is an attempt to get the delay and reachable transfers for every pair of stations individually.
@@ -15,6 +16,10 @@ With this attempt there comes the problem of compute time and therefore some com
 3. When a transfer is not reachable only transfers in the next 3 hours are looked at as an alternative.
 
 All in all it still takes a very long time to compute all combinations of stations, but the results might be worth it."""
+
+
+DATA_DIR = "../../dat/train_data/frankfurt_hbf/"
+Path(DATA_DIR).mkdir(parents=True, exist_ok=True)
 
 
 def find_biggest_gain_per_next_stop(incoming, outgoing):
@@ -271,10 +276,10 @@ def create_inner_dict_delay():
     return defaultdict(list)
 
 
-with open('data/incoming.pkl', 'rb') as file:
+with open(DATA_DIR + 'incoming.pkl', 'rb') as file:
     incoming = pickle.load(file)
 
-with open('data/outgoing.pkl', 'rb') as file:
+with open(DATA_DIR + 'outgoing.pkl', 'rb') as file:
     outgoing = pickle.load(file)
 gains, average_gain = find_biggest_gain_per_next_stop(incoming, outgoing)
 average_gain = {key: value[1] for key, value in average_gain.items()}
@@ -353,7 +358,7 @@ for i in range(len(list_of_incomings)):
             origin = 'Köln Messe-Deutz'
         if origin == 'Siegburg/Bonn':
             origin = 'Siegburg-Bonn'
-        with open('data/delay_per_stop/delay_{}.json'.format(origin), 'w') as file:
+        with open(DATA_DIR + 'delay_per_stop/delay_{}.json'.format(origin), 'w') as file:
             json.dump(delay_all, file)
-        with open('data/reachable_per_stop/reachable_{}.json'.format(origin), 'w') as file:
+        with open(DATA_DIR + 'reachable_per_stop/reachable_{}.json'.format(origin), 'w') as file:
             json.dump(reachable_all, file)
