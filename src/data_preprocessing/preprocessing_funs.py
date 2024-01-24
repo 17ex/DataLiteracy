@@ -253,3 +253,14 @@ def write_excluded_station_pairs(station_coords, stations, filename):
     station_pairs[['NAME_x', 'NAME_y']] \
         .rename(columns={'NAME_x': 'origin', 'NAME_y': 'destination'}) \
         .to_csv(filename, index=False)
+
+
+def load_excluded_pairs(data_dir):
+    """
+    Returns a set containing tuples (origin, destination)
+    of station names that should be ignored in the analysis.
+    """
+    excluded_pairs = set()
+    for _, origin, destination in pd.read_csv(data_dir + "excluded_pairs.csv").itertuples():
+        excluded_pairs.add((origin, destination))
+    return excluded_pairs
