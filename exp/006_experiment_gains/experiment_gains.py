@@ -4,7 +4,7 @@ import json
 import pickle
 from pathlib import Path
 import sys
-if Path.cwd().stem == '005_experiment_gains':
+if Path.cwd().stem == '006_experiment_gains':
     sys.path.append('../..')
 
 from src.data_preprocessing.preprocessing_funs import format_station_name_file
