@@ -4,9 +4,11 @@ from datetime import datetime
 import numpy as np
 from pathlib import Path
 from preprocessing_funs import *
+import requests
 
-INPUT_DIR = "../../dat/scraped/"
-OUTPUT_DIR = "../../dat/train_data/frankfurt_hbf/"
+DATA_DIR = "../../dat/"
+INPUT_DIR = DATA_DIR + "scraped/"
+OUTPUT_DIR = DATA_DIR + "train_data/frankfurt_hbf/"
 Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 
 
@@ -119,3 +121,17 @@ outgoing = add_directions(outgoing, False, debug=False)
 
 incoming.to_pickle(OUTPUT_DIR + "incoming.pkl")
 outgoing.to_pickle(OUTPUT_DIR + "outgoing.pkl")
+
+
+# Download file containing train station coordinates
+# TODO only download if file doesnt exist yet
+coordinates_file = Path(DATA_DIR + "coordinates.csv")
+if not coordinates_file.is_file():
+    coordinates_file_url = "https://download-data.deutschebahn.com/static/datasets/haltestellen/D_Bahnhof_2020_alle.CSV"
+    resp = requests.get(coordinates_file_url)
+    if resp.ok:
+        with open(coordinates_file, mode="wb") as f:
+            f.write(resp.content)
+    else:
+        print("WARNING: Download of coordinates.csv failed!")
+        print(f"Server replied status {resp.status_code}")
