@@ -7,7 +7,7 @@ import sys
 if Path.cwd().stem == '005_delay_baed_on_exact_stop_tidy':
     sys.path.append('../..')
 
-from src.data_preprocessing.preprocessing_funs import format_station_name_file
+from src.data_preprocessing.preprocessing_funs import format_station_name_file, load_excluded_pairs
 import src.analysis_functions.general_functions as general
 import src.analysis_functions.exact_stop_functions as exact_stop
 
@@ -25,6 +25,8 @@ with open(DATA_DIR + 'incoming.pkl', 'rb') as file:
 
 with open(DATA_DIR + 'outgoing.pkl', 'rb') as file:
     outgoing = pickle.load(file)
+
+excluded_pairs = load_excluded_pairs("excluded_pairs.csv")
 
 incoming['date'] = pd.to_datetime(incoming['date'])
 outgoing['date'] = pd.to_datetime(outgoing['date'])
@@ -67,9 +69,11 @@ for origin in unique_stations_in:
     reachable_all = {}
     print(origin)
     for destination in unique_stations_out:
-        if destination not in station_subset:
-            continue
-        if origin == destination:
+        if (
+                destination not in station_subset
+                or origin == destination
+                or (origin, destination) in excluded_pairs
+           ):
             continue
         org_direction = None
         dest_direction = None
