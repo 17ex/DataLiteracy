@@ -3,6 +3,7 @@ from datetime import timedelta
 from datetime import datetime
 import numpy as np
 from pathlib import Path
+import math
 
 def min_time_diff(group):
     min_diff = float('inf')  # Set an initial maximum value for minimum difference
@@ -90,12 +91,12 @@ def fix_delays(row):
     old_delays = delays.copy()
     #departures = row['departure']
     arrivals = row['arrival']
-    
+
     for i in range(1, len(delays)):
         # Calculate time difference in minutes
         time_diff_minutes = (arrivals[i] - arrivals[i-1]).total_seconds() / 60
         threshold = 0.27 * time_diff_minutes
-        
+
         if delays[i-1] > 10 and delays[i] == 0 and delays[i-1] - delays[i] > threshold:
             if i < len(delays) - 1:
                 delays[i] = (delays[i-1] + delays[i+1]) // 2
@@ -119,14 +120,14 @@ def add_directions(train_data, is_incoming, debug=False):
               'North East': ['Weißenfels', 'Wittenberge', 'Naumburg(Saale)Hbf', 'Stendal Hbf', 'Halle(Saale)Hbf', 'Bitterfeld', 'Berlin Ostbahnhof','Berlin Südkreuz', 'Dresden-Neustadt', 'Wolfsburg Hbf', 'Eisenach', 'Dresden Hbf', 'Berlin-Spandau', 'Lutherstadt Wittenberg Hbf', 'Riesa', 'Hildesheim Hbf', 'Berlin Hbf', 'Braunschweig Hbf', 'Erfurt Hbf', 'Leipzig Hbf',
                              'Brandenburg Hbf', 'Magdeburg Hbf', 'Berlin Gesundbrunnen'],
               'East': ['München-Pasing', 'München Hbf', 'Augsburg Hbf', 'Plattling', 'Aschaffenburg Hbf', 'Passau Hbf', 'Nürnberg Hbf', 'Würzburg Hbf', 'Regensburg Hbf', 'Ingolstadt Hbf']}
-    
+
     direction_list = [""] * len(train_data)
     remove_indices = set()
     not_found = found = airport = count_impossible = 0
 
     for index, train_out in enumerate(train_data.itertuples()):
         direction_set = set()
-        
+
         if is_incoming:
             stops = list(train_out.origin)
             stops.reverse()
@@ -162,7 +163,7 @@ def add_directions(train_data, is_incoming, debug=False):
 
     train_data['direction'] = direction_list
 
-    
+
     # Remove indices found while debugging
     if is_incoming:
         remove_indices.update([35371, 35372, 88424])
@@ -187,3 +188,68 @@ def format_station_name_file(input_string):
     output_string = input_string.replace('ä', 'ae').replace('ö', 'oe').replace('ü', 'ue')
     output_string = output_string.replace('/', '-')
     return output_string
+
+
+def unique_station_names(data_in, data_out):
+    incoming_stations = set(data_in["origin"])
+    outgoing_stations = set(data_out["destination"])
+    stations = incoming_stations.union(outgoing_stations)
+    # Rename a few stations
+    stations.add("Frankfurt(Main)Hbf")
+    stations.add("Frankfurt(M) Flughafen Fernbf")
+    stations.add("Stendal")
+    stations.add("Hamm(Westf)")
+    stations.remove('Hamm(Westf)Hbf')
+    stations.remove('Frankfurt am Main Flughafen Fernbahnhof')
+    stations.remove('Stendal Hbf')
+    return stations
+
+
+def haversine(coord1, coord2):
+    # Radius of the Earth in km
+    R = 6371.0
+    lat1, lon1 = coord1
+    lat2, lon2 = coord2
+    lat1 = float(lat1.replace(',', '.'))
+    lon1 = float(lon1.replace(',', '.'))
+    lat2 = float(lat2.replace(',', '.'))
+    lon2 = float(lon2.replace(',', '.'))
+    # Convert latitude and longitude from degrees to radians
+    phi1, phi2 = math.radians(lat1), math.radians(lat2)
+    delta_phi = math.radians(lat2 - lat1)
+    delta_lambda = math.radians(lon2 - lon1)
+    # Haversine formula
+    a = math.sin(delta_phi / 2)**2 + math.cos(phi1) * math.cos(phi2) * math.sin(delta_lambda / 2)**2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    # Distance in kilometers
+    distance = R * c
+    return distance
+
+
+def pair_exclusion_criterion(origin_coords, destination_coords, frankfurt_coords):
+    return (
+        haversine(origin_coords, destination_coords) * 1.5
+        < (haversine(frankfurt_coords, origin_coords)
+           + haversine(frankfurt_coords, destination_coords))
+    )
+
+
+def write_excluded_station_pairs(station_coords, stations, filename):
+    station_coords = station_coords[station_coords['NAME'].isin(stations)]
+    frankfurt_coords = station_coords[
+            station_coords["NAME"] == "Frankfurt(Main)Hbf"] \
+                    .iloc[0][['Laenge', 'Breite']]
+    station_pairs = station_coords.merge(station_coords, how='cross')
+
+    def exclusion_fun(coord_pair):
+        return pair_exclusion_criterion(
+                (coord_pair['Laenge_x'], coord_pair['Breite_x']),
+                (coord_pair['Laenge_y'], coord_pair['Breite_y']),
+                frankfurt_coords)
+
+    station_pairs = station_pairs[
+            station_pairs.apply(exclusion_fun, axis=1)
+            ]
+    station_pairs[['NAME_x', 'NAME_y']] \
+        .rename(columns={'NAME_x': 'origin', 'NAME_y': 'destination'}) \
+        .to_csv(filename, index=False)
