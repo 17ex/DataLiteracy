@@ -5,20 +5,6 @@ import numpy as np
 from pathlib import Path
 import math
 
-def min_time_diff(group):
-    min_diff = float('inf')  # Set an initial maximum value for minimum difference
-    times = group['arrival'].tolist()
-    for i, time_i in enumerate(times):
-        for j in range(i + 1, len(times)):
-            time_diff = abs((times[j] - time_i).total_seconds())
-            min_diff = min(min_diff, time_diff)
-    return min_diff
-
-
-# Define a custom aggregation function to collect the values in to a list
-def list_agg(x):
-    return list(x)
-
 
 def str_to_date(s):
     return datetime.strptime(s, '%d.%m.%Y').date()

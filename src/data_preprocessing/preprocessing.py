@@ -33,10 +33,10 @@ data_out = data_out.sort_values(["date", "arrival"])
 # with lists specifying the stops, delays, etc.
 result_in = data_in.groupby(['train', 'date', 'arrival', 'destination'])[
         ['origin', 'departure', 'delay', 'cancellation']
-        ].agg(list_agg).reset_index()
+        ].agg(list).reset_index()
 result_out = data_out.groupby(['train', 'date', 'departure', 'origin'])[
         ['destination', 'arrival', 'delay', 'cancellation']
-        ].agg(list_agg).reset_index()
+        ].agg(list).reset_index()
 
 
 # Interpolate delays for data points with 0 delay
