@@ -54,7 +54,7 @@ def add_columns(candidate_transfers, destination):
     )
     return candidate_transfers
 
-def reachable_transfers(incoming_from_origin, outgoing, origin, destination, gains={}, max_hours=4, estimated_gain=0.0, worst_case=False):
+def reachable_transfers(incoming_from_origin, outgoing, origin, destination, max_delay=60, gains={}, max_hours=4, estimated_gain=0.0, worst_case=False):
     """
     Identifies reachable transfers between incoming and outgoing trains.
 
@@ -117,7 +117,7 @@ def reachable_transfers(incoming_from_origin, outgoing, origin, destination, gai
         for train in group_id.itertuples():
             # filter out trains for which we can't find next trains as we merge on the date
             # or train.departure_y.time() > threshold_time
-            if train.transfer_time > 60:
+            if train.transfer_time > max_delay:
                 num_discarded += 1
                 continue
             dest_idx = train.destination_idx
@@ -126,13 +126,11 @@ def reachable_transfers(incoming_from_origin, outgoing, origin, destination, gai
             plan_departure_origin = train.departure_origin
             plan_difference, delay_difference = \
                 get_plan_and_delay_difference(train, gains, estimated_gain, worst_case)
-            delay['switch time'].append(plan_difference)
-            delay['date'].append(plan_arrival.strftime('%Y-%m-%d %H:%M:%S'))
 
             if train.cancellation_inbound:
                 # If the train that should arrive in Frankfurt was cancelled
                 # Find the next train going from origin to Frankfurt as alternative
-                delay['reachable'].append(1)
+                train_reachable = 1
                 # filtering so these trains have a planned departure
                 # at the origin after the original train
                 candidate_connections_to_frankfurt = group_date[
@@ -145,13 +143,13 @@ def reachable_transfers(incoming_from_origin, outgoing, origin, destination, gai
                                     worst_case)
                 if next_train is not None:
                     num_found_alternative_to_frankfurt += 1
-                    delay['delay'].append(next_train.delay_y[dest_idx] + extra_delay)
+                    train_delay = next_train.delay_y[dest_idx] + extra_delay
                 else:
                     num_not_found_alternative_to_frankfurt += 1
-                    delay['delay'].append(max_delay_minutes - train.transfer_time)
+                    train_delay = max_delay_minutes - train.transfer_time
             elif train.cancellation_outbound or plan_difference <= delay_difference:
                 # If the departing train was cancelled or transfer to it is impossible
-                delay['reachable'].append(2)
+                train_reachable = 2
                 # only look at trains that leave later in Frankfurt
                 candidate_departing_trains = group_id[group_id['departure_y'] > arrival_FRA]
                 next_train, extra_delay, dest_idx = \
@@ -162,7 +160,7 @@ def reachable_transfers(incoming_from_origin, outgoing, origin, destination, gai
                                     worst_case)
                 if next_train is not None:
                     num_found_alternative_from_frankfurt += 1
-                    delay['delay'].append(next_train.delay_y[dest_idx] + extra_delay)
+                    train_delay = next_train.delay_y[dest_idx] + extra_delay
                 else:
                     if train.arrival_x.time() > time(24 - max_hours, 0, 0):
                         df1 = incoming_from_origin[incoming_from_origin['in_id'] == train.in_id_x]
@@ -178,22 +176,27 @@ def reachable_transfers(incoming_from_origin, outgoing, origin, destination, gai
                             next_train, extra_delay, dest_idx = find_next_train(train, candidate_transfers_next_day, gains, estimated_gain, worst_case)
                             if next_train is not None:
                                 num_found_alternative_from_frankfurt += 1
-                                delay['delay'].append(next_train.delay_y[dest_idx] + extra_delay)
+                                train_delay = next_train.delay_y[dest_idx] + extra_delay
                                 # print(next_train.arrival_x, next_train.departure_y)
                             else:
                                 # print('No next', train.arrival_x, len(df2))
                                 num_not_found_alternative_from_frankfurt += 1
-                                delay['delay'].append(max_delay_minutes - train.transfer_time)
+                                train_delay = max_delay_minutes - train.transfer_time
                         else:
                             num_not_found_alternative_from_frankfurt += 1
-                            delay['delay'].append(max_delay_minutes - train.transfer_time)
+                            train_delay = max_delay_minutes - train.transfer_time
                     else:
                         num_not_found_alternative_from_frankfurt += 1
-                        delay['delay'].append(max_delay_minutes - train.transfer_time)
+                        train_delay = max_delay_minutes - train.transfer_time
             else:
                 # If it was possible to take the connecting train as planned
-                delay['reachable'].append(3)
-                delay['delay'].append(train.delay_y[dest_idx])
+                train_reachable = 3
+                train_delay = train.delay_y[dest_idx]
+            if train_delay >= 0:
+                delay['switch time'].append(plan_difference)
+                delay['date'].append(plan_arrival.strftime('%Y-%m-%d %H:%M:%S'))
+                delay['reachable'].append(train_reachable)
+                delay['delay'].append(train_delay)
     if len(candidate_transfers) > 0:
         print(num_discarded / len(candidate_transfers))
     if num_found_alternative_to_frankfurt > 0 \
