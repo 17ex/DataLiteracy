@@ -26,7 +26,7 @@ with open(DATA_DIR + 'incoming.pkl', 'rb') as file:
 with open(DATA_DIR + 'outgoing.pkl', 'rb') as file:
     outgoing = pickle.load(file)
 
-excluded_pairs = load_excluded_pairs("excluded_pairs.csv")
+excluded_pairs = load_excluded_pairs("../../dat/")
 
 incoming['date'] = pd.to_datetime(incoming['date'])
 outgoing['date'] = pd.to_datetime(outgoing['date'])
