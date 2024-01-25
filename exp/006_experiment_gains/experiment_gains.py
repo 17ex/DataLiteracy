@@ -28,7 +28,6 @@ Path(SAVE_DIR + 'no_wait/').mkdir(parents=True, exist_ok=True)
 Path(SAVE_DIR + 'avg_gain/').mkdir(parents=True, exist_ok=True)
 Path(SAVE_DIR + 'zero_gain/').mkdir(parents=True, exist_ok=True)
 Path(SAVE_DIR + 'avg_pos_gain/').mkdir(parents=True, exist_ok=True)
-Path(SAVE_DIR + 'est_max_gain/').mkdir(parents=True, exist_ok=True)
 Path(SAVE_DIR + 'theoretical_max_gain/').mkdir(parents=True, exist_ok=True)
 with open(DATA_DIR + 'incoming.pkl', 'rb') as file:
     incoming = pickle.load(file)
@@ -42,11 +41,9 @@ incoming['date'] = pd.to_datetime(incoming['date'])
 outgoing['date'] = pd.to_datetime(outgoing['date'])
 all_gains = general.find_gains_per_next_stop(incoming, outgoing)
 average_gain = {}
-max_gain = {}
 pos_avg_gain = {}
 for key in all_gains.keys():
     average_gain[key] = np.mean(all_gains[key])
-    max_gain[key] = np.amax(all_gains[key])
     positive_numbers = [num for num in all_gains[key] if num > 0]
     pos_avg_gain[key] = np.mean(positive_numbers)
     # TODO properly handle case when there are no direct connections
@@ -77,7 +74,6 @@ for origin in unique_stations_in:
     delay_all_avg_gain = {}
     delay_all_zero_gain = {}
     delay_all_avg_pos_gain = {}
-    delay_all_est_max_gain = {}
     delay_all_theoretical_max_gain = {}
     print(origin)
     for destination in unique_stations_out:
@@ -107,13 +103,11 @@ for origin in unique_stations_in:
         delay_avg_gain = exact_stop.reachable_transfers(incoming_from_origin, outgoing, origin, destination, gains=average_gain)
         delay_zero_gain = exact_stop.reachable_transfers(incoming_from_origin, outgoing, origin, destination, estimated_gain=0.0)
         delay_avg_pos_gain = exact_stop.reachable_transfers(incoming_from_origin, outgoing, origin, destination, gains=pos_avg_gain)
-        delay_est_max_gain = exact_stop.reachable_transfers(incoming_from_origin, outgoing, origin, destination, gains=max_gain)
         delay_theoretical_max_gain = exact_stop.reachable_transfers(incoming_from_origin, outgoing, origin, destination, estimated_gain=0.27)
         delay_all_no_wait[destination] = delay_no_wait
         delay_all_avg_gain[destination] = delay_avg_gain
         delay_all_zero_gain[destination] = delay_zero_gain
         delay_all_avg_pos_gain[destination] = delay_avg_pos_gain
-        delay_all_est_max_gain[destination] = delay_est_max_gain
         delay_all_theoretical_max_gain[destination] = delay_theoretical_max_gain
     with open(SAVE_DIR + 'no_wait/' f'delay_{format_station_name_file(origin)}.json', 'w') as file:
         json.dump(delay_all_no_wait, file)
@@ -123,7 +117,5 @@ for origin in unique_stations_in:
         json.dump(delay_all_zero_gain, file)
     with open(SAVE_DIR + 'avg_pos_gain/' f'delay_{format_station_name_file(origin)}.json', 'w') as file:
         json.dump(delay_all_avg_pos_gain, file)
-    with open(SAVE_DIR + 'est_max_gain/' f'delay_{format_station_name_file(origin)}.json', 'w') as file:
-        json.dump(delay_all_est_max_gain, file)
     with open(SAVE_DIR + 'theoretical_max_gain/' f'delay_{format_station_name_file(origin)}.json', 'w') as file:
         json.dump(delay_all_theoretical_max_gain, file)
