@@ -37,7 +37,7 @@ def format_datetimes(df):
                         c['arrival'],
                         c['departure']),
                     axis=1)
-    # We use the date of a train as the date of departure.
+    # We define the date of a train as the date of departure.
     # If the train arrives a day later, it still has the date of departure
     # associated with it.
     df.loc[:, 'date'] = df.loc[:, 'departure'].apply(lambda d: d.date())
@@ -48,10 +48,19 @@ def all_equal(lst):
 
 
 def remove_unequal_delays(df):
+    """
+    This should remove incoming trains from the dataset for which,
+    after merging into one train with lists containing each station,
+    the lists with the delay at Frankfurt Hbf contain different values,
+    as this is impossible (it is the same train) and the data point
+    must be wrong.
+    """
     return df[df['delay'].apply(all_equal)]
 
 
 def cancellation_to_int(s):
+    # TODO
+    # Is this a mistake? 2x0, in else case it should be a 2?
     if pd.isna(s):
         return 0
     elif s == 'Ausfall (Startbahnhof)':
@@ -74,13 +83,11 @@ def d_id_to_int(d):
 def fix_delays(row):
     change_count = 0
     delays = row['delay']
-    old_delays = delays.copy()
-    #departures = row['departure']
     arrivals = row['arrival']
-
     for i in range(1, len(delays)):
         # Calculate time difference in minutes
         time_diff_minutes = (arrivals[i] - arrivals[i-1]).total_seconds() / 60
+        # TODO explain 0.27
         threshold = 0.27 * time_diff_minutes
 
         if delays[i-1] > 10 and delays[i] == 0 and delays[i-1] - delays[i] > threshold:
@@ -89,15 +96,21 @@ def fix_delays(row):
             else:
                 delays[i] = delays[i-1]
             change_count += 1
-    if change_count > 0:
-        #print(f"{old_delays} -> {delays}")
-        pass
     return delays, change_count
 
 
 def add_directions(train_data, is_incoming, debug=False):
-
+    """
+    Determine the direction a train is taking.
+    Directions are one of the five:
+    South, West, North, North East, East.
+    Returns a dataframe with an additional direction column
+    containing the appropriate direction.
+    """
     direction_list = [""] * len(train_data)
+    # TODO
+    # There is a function somewhere that contains this too.
+    # Use that.
     directions = {'South': ['Weinheim(Bergstr)Hbf', 'Bruchsal', 'Karlsruhe-Durlach', 'Günzburg', 'Bensheim', 'Mannheim Hbf', 'Stuttgart Hbf', 'Karlsruhe Hbf', 'Kaiserslautern Hbf', 'Saarbrücken Hbf',
                         'Baden-Baden', 'Ulm Hbf', 'Heidelberg Hbf', 'Darmstadt Hbf', 'Wiesloch-Walldorf', 'Offenburg', 'Freiburg(Breisgau) Hbf'],
               'West': ['Hamm(Westf)Hbf', 'Aachen Hbf', 'Mönchengladbach Hbf', 'Siegburg/Bonn', 'Hagen Hbf', 'Duisburg Hbf', 'Recklinghausen Hbf', 'Andernach', 'Köln/Bonn Flughafen', 'Solingen Hbf', 'Oberhausen Hbf', 'Montabaur', 'Münster(Westf)Hbf', 'Bochum Hbf', 'Wuppertal Hbf', 'Köln Hbf', 'Mainz Hbf', 'Frankfurt(Main)West',
@@ -149,8 +162,10 @@ def add_directions(train_data, is_incoming, debug=False):
 
     train_data['direction'] = direction_list
 
-
     # Remove indices found while debugging
+    # TODO
+    # How were these indices found?
+    # Replace with checks instead of magic numbers
     if is_incoming:
         remove_indices.update([35371, 35372, 88424])
     else:
@@ -180,7 +195,7 @@ def unique_station_names(data_in, data_out):
     incoming_stations = set(data_in["origin"])
     outgoing_stations = set(data_out["destination"])
     stations = incoming_stations.union(outgoing_stations)
-    # Rename a few stations
+    # Rename a few stations as the 2 datasets use different names for these
     stations.add("Frankfurt(Main)Hbf")
     stations.add("Frankfurt(M) Flughafen Fernbf")
     stations.add("Stendal")
