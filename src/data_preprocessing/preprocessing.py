@@ -23,6 +23,11 @@ print(f"Number of incoming datapoints: {len(data_in)}")
 print(f"Number of outgoing datapoints: {len(data_out)}")
 
 print("Formatting dates and times")
+delays_in = data_in[pd.isna(data_in["cancellation"])]
+delays_out = data_out[pd.isna(data_out["cancellation"])]
+all_delays = np.append(np.array(delays_in["delay"]), np.array(delays_out["delay"]))
+print(f"Mean delay: {np.mean(all_delays)}")
+
 format_datetimes(data_in)
 format_datetimes(data_out)
 
