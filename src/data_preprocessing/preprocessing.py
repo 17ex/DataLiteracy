@@ -22,13 +22,15 @@ data_out = pd.read_csv(INPUT_DIR + "scraped_outgoing_Frankfurt_Hbf.csv",
 print(f"Number of incoming datapoints: {len(data_in)}")
 print(f"Number of outgoing datapoints: {len(data_out)}")
 
+print("Formatting dates and times")
 format_datetimes(data_in)
 format_datetimes(data_out)
 
 data_in = data_in.sort_values(["date", "departure"])
 data_out = data_out.sort_values(["date", "arrival"])
 
-# Use groupby with agg to apply custom aggregation function
+# Merge individual rows (stops of a train) together into one train line,
+# with lists specifying the stops, delays, etc.
 result_in = data_in.groupby(['train', 'date', 'arrival', 'destination'])[
         ['origin', 'departure', 'delay', 'cancellation']
         ].agg(list_agg).reset_index()
@@ -67,26 +69,26 @@ result_out.loc[:, 'cancellation'] = \
 in_clean = in_clean_delays.infer_objects()
 out_clean = result_out.infer_objects()
 
-# min_time_differences = in_clean.groupby(['date', 'train']).apply(min_time_diff)
-# print(min(min_time_differences))
-
+# Assign ids to every individual train
 len_in = len(in_clean)
 len_out = len(out_clean)
 in_clean['in_id'] = range(0, len_in)
 out_clean['out_id'] = range(len_in, len_in + len_out)
 
+print("Matching corresponding incoming and outgoing connections")
 merged = pd.merge(in_clean, out_clean, on=['date', 'train'], how='outer',
                   suffixes=['_in', '_out'])
-
-
-condition = (
+correctly_matched = (
         pd.isna(merged['arrival_in']) |
         pd.isna(merged['departure_out']) |
-        ((merged['arrival_in'] <= merged['departure_out']) &    # drop wrongly merged trains
+        ((merged['arrival_in'] <= merged['departure_out']) &
          (merged['arrival_in'] > merged['departure_out'] - timedelta(minutes=60))
+         # Here, it is assumed that trains with the same train name have at
+         # least one hour in-between different trains with the same train name,
+         # which was manually verified to be the case for our dataset.
          )
         )
-merged = merged[condition]
+merged = merged[correctly_matched]
 
 incoming = merged.loc[merged.loc[:, 'in_id'].notna()]
 outgoing = merged.loc[merged.loc[:, 'out_id'].notna()]
@@ -96,6 +98,7 @@ incoming = incoming.loc[:, ['in_id', 'train', 'date', 'arrival_in',
 outgoing = outgoing.loc[:, ['out_id', 'train', 'date', 'arrival_out',
                             'destination_out', 'origin_out', 'departure_out',
                             'delay_out', 'cancellation_out', 'in_id']]
+# Rename the columns again after the merge and set some column types
 incoming = incoming.rename(columns={'arrival_in': 'arrival',
                                     'destination_in': 'destination',
                                     'origin_in': 'origin',
