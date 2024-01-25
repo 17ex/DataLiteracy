@@ -59,14 +59,16 @@ def remove_unequal_delays(df):
 
 
 def cancellation_to_int(s):
-    # TODO
-    # Is this a mistake? 2x0, in else case it should be a 2?
+    """
+    Returns 0 if input is na (no cancellation),
+    1 if input specifies the train was cancelled at its origin station,
+    2 if input specifies the train was cancelled at its destination.
+    """
     if pd.isna(s):
         return 0
-    elif s == 'Ausfall (Startbahnhof)':
+    if s == 'Ausfall (Startbahnhof)':
         return 1
-    else:
-        return 0
+    return 2
 
 
 def cancellation_to_int_lst(l):
