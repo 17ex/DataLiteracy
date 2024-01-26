@@ -114,7 +114,7 @@ def calculate_delays_per_origin(origin):
                origin,
                destination,
                gains=average_gain)
-    with open(SAVE_DIR + f'delay_{format_station_name_file(origin)}.json', 'w') as file:
+    with open(SAVE_DIR + f'delay_007_{format_station_name_file(origin)}.json', 'w') as file:
         json.dump(delay_all, file)
     return None
 
