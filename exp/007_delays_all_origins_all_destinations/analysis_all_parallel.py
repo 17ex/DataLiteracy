@@ -6,7 +6,7 @@ from pathlib import Path
 from parallel_pandas import ParallelPandas
 import sys
 
-if Path.cwd().stem == '007_parallelized':
+if Path.cwd().stem == '007_delays_all_origins_all_destinations':
     sys.path.append('../..')
 
 from src.data_preprocessing.preprocessing_funs import format_station_name_file, load_excluded_pairs
