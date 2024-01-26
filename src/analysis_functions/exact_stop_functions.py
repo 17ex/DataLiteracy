@@ -54,7 +54,8 @@ def add_columns(candidate_transfers, destination):
     )
     return candidate_transfers
 
-def reachable_transfers(incoming_from_origin, outgoing, origin, destination, max_delay=60, gains={}, max_hours=4, estimated_gain=0.0, worst_case=False):
+def reachable_transfers(incoming_from_origin, outgoing, origin, destination, max_delay=60,
+                        gains={}, max_hours=4, estimated_gain=0.0, worst_case=False, debug=False):
     """
     Identifies reachable transfers between incoming and outgoing trains.
 
@@ -87,7 +88,8 @@ def reachable_transfers(incoming_from_origin, outgoing, origin, destination, max
     candidate_transfers['transfer_time'] = \
         (candidate_transfers['departure_y']
          - candidate_transfers['arrival_x']).dt.total_seconds() / 60
-    print(len(incoming_from_origin), len(candidate_transfers['in_id_x'].unique()))
+    if debug:
+        print(len(incoming_from_origin), len(candidate_transfers['in_id_x'].unique()))
     # Filter out trains that go from origin to destination directly,
     # as there is no train transfer in that case.
     candidate_transfers = candidate_transfers[
@@ -177,9 +179,7 @@ def reachable_transfers(incoming_from_origin, outgoing, origin, destination, max
                             if next_train is not None:
                                 num_found_alternative_from_frankfurt += 1
                                 train_delay = next_train.delay_y[dest_idx] + extra_delay
-                                # print(next_train.arrival_x, next_train.departure_y)
                             else:
-                                # print('No next', train.arrival_x, len(df2))
                                 num_not_found_alternative_from_frankfurt += 1
                                 train_delay = max_delay_minutes - train.transfer_time
                         else:
@@ -197,9 +197,9 @@ def reachable_transfers(incoming_from_origin, outgoing, origin, destination, max
                 delay['date'].append(plan_arrival.strftime('%Y-%m-%d %H:%M:%S'))
                 delay['reachable'].append(train_reachable)
                 delay['delay'].append(train_delay)
-    if len(candidate_transfers) > 0:
+    if debug and len(candidate_transfers) > 0:
         print(num_discarded / len(candidate_transfers))
-    if num_found_alternative_to_frankfurt > 0 \
+    if debug and num_found_alternative_to_frankfurt > 0 \
             and num_found_alternative_from_frankfurt > 0:
         print(num_found_alternative_to_frankfurt,
               num_not_found_alternative_to_frankfurt,
