@@ -55,7 +55,6 @@ unique_stations_in = set()
 unique_stations_out = set()
 
 # Drop data we don't need
-del incoming['destination']
 del outgoing['origin']
 
 
