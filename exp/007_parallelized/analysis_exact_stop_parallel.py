@@ -19,6 +19,7 @@ station_subset = {'Essen Hbf', 'Leipzig Hbf', 'Magdeburg Hbf', 'Hamburg Hbf', 'K
     , 'Berlin Hbf', 'Erfurt Hbf', 'Hannover Hbf', 'Köln Hbf', 'Schwerin Hbf', 'München Hbf', 'Düsseldorf Hbf'
     , 'Duisburg Hbf', 'Dresden Hbf', 'Mainz Hbf', 'Bremen Hbf', 'Saarbrücken Hbf', 'Dortmund Hbf', 'Karlsruhe Hbf'
     , 'Nürnberg Hbf', 'Wiesbaden Hbf', 'Köln Hbf'}
+pd.options.mode.chained_assignment = None
 
 DATA_DIR = "../../dat/train_data/frankfurt_hbf/"
 SAVE_DIR = "../../dat/results/delay/"
