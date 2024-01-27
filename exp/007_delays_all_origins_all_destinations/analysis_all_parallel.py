@@ -5,13 +5,13 @@ import pickle
 from pathlib import Path
 from parallel_pandas import ParallelPandas
 import sys
+import os
 
-if Path.cwd().stem == '007_delays_all_origins_all_destinations':
-    sys.path.append('../..')
-
-from src.data_preprocessing.preprocessing_funs import format_station_name_file, load_excluded_pairs
-import src.analysis_functions.general_functions as general
-import src.analysis_functions.exact_stop_functions as exact_stop
+sys.path.insert(1, os.path.realpath(os.path.join(os.path.dirname(__file__),
+                                                 os.pardir, os.pardir, 'src')))
+from data_preprocessing.preprocessing_funs import format_station_name_file, load_excluded_pairs
+import analysis_functions.general_functions as general
+import analysis_functions.exact_stop_functions as exact_stop
 
 ParallelPandas.initialize(n_cpu=6, split_factor=3, disable_pr_bar=False, show_vmem=True)
 USE_SUBSET = False

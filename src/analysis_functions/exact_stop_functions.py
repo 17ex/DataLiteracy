@@ -1,4 +1,4 @@
-from src.analysis_functions.general_functions import can_take_connecting_train, get_plan_and_delay_difference
+from analysis_functions.general_functions import can_take_connecting_train, get_plan_and_delay_difference
 import pandas as pd
 from datetime import datetime, time, timedelta
 
