@@ -1,4 +1,4 @@
-from analysis_functions.general_functions import can_take_connecting_train, get_plan_and_delay_difference
+from general_functions import can_take_connecting_train, get_plan_and_delay_difference
 import pandas as pd
 from datetime import datetime, time, timedelta
 
@@ -56,6 +56,8 @@ def add_columns(candidate_transfers, destination):
 
 def reachable_transfers(incoming_from_origin, outgoing, origin, destination, max_delay=60,
                         gains={}, max_hours=4, estimated_gain=0.0, worst_case=False, debug=False):
+    # TODO
+    # This function is in dire need of refactoring
     """
     Identifies reachable transfers between incoming and outgoing trains.
 

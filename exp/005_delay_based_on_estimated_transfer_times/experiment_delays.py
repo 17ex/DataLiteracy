@@ -9,8 +9,8 @@ import os
 sys.path.insert(1, os.path.realpath(os.path.join(os.path.dirname(__file__),
                                                  os.pardir, os.pardir, 'src')))
 from data_tools import format_station_name_file, load_excluded_pairs
-import analysis_functions.general_functions as general
-import analysis_functions.exact_stop_functions as exact_stop
+import general_functions as general
+import exact_stop_functions as exact_stop
 
 station_subset = ['Essen Hbf', 'Leipzig Hbf', 'Magdeburg Hbf', 'Hamburg Hbf', 'Kiel Hbf', 'Stuttgart Hbf', 'Potsdam Hbf'
     , 'Berlin Hbf', 'Erfurt Hbf', 'Hannover Hbf', 'Köln Hbf', 'Schwerin Hbf', 'München Hbf', 'Düsseldorf Hbf'
