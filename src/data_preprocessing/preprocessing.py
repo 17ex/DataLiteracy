@@ -7,7 +7,7 @@ from preprocessing_funs import *
 import requests
 
 DATA_DIR = "../../dat/"
-INPUT_DIR = DATA_DIR + "scraped/"
+INPUT_DIR = DATA_DIR + "raw/"
 OUTPUT_DIR = DATA_DIR + "train_data/frankfurt_hbf/"
 Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 
