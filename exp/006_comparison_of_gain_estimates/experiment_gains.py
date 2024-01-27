@@ -8,7 +8,7 @@ import os
 
 sys.path.insert(1, os.path.realpath(os.path.join(os.path.dirname(__file__),
                                                  os.pardir, os.pardir, 'src')))
-from data_preprocessing.preprocessing_funs import format_station_name_file, load_excluded_pairs
+from data_tools import format_station_name_file, load_excluded_pairs
 import analysis_functions.general_functions as general
 import analysis_functions.exact_stop_functions as exact_stop
 
