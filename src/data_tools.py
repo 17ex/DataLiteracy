@@ -1,3 +1,9 @@
+"""
+This file contains functions that work directly on data.
+Almost all of it is used for data preprocessing in the
+preprocessing.py script, but a few of these functions
+are also used in the experiments.
+"""
 import pandas as pd
 from datetime import timedelta
 from datetime import datetime
@@ -89,7 +95,9 @@ def fix_delays(row):
     for i in range(1, len(delays)):
         # Calculate time difference in minutes
         time_diff_minutes = (arrivals[i] - arrivals[i-1]).total_seconds() / 60
-        # TODO explain 0.27
+        # Between two stations, a train in Germany can make up at most 27% of the time
+        # that it takes to get from one to the other.
+        # We assume that anything more than that is an error in the data, and cap it.
         threshold = 0.27 * time_diff_minutes
 
         if delays[i-1] > 10 and delays[i] == 0 and delays[i-1] - delays[i] > threshold:
