@@ -93,6 +93,7 @@ def fix_delays(row):
     change_count = 0
     delays = row['delay']
     arrivals = row['arrival']
+    cancellations = row['cancellation']
     for i in range(1, len(delays)):
         # Calculate time difference in minutes
         time_diff_minutes = (arrivals[i] - arrivals[i-1]).total_seconds() / 60
@@ -101,7 +102,7 @@ def fix_delays(row):
         # We assume that anything more than that is an error in the data, and cap it.
         threshold = 0.27 * time_diff_minutes
 
-        if delays[i-1] > 10 and delays[i] == 0 and delays[i-1] - delays[i] > threshold:
+        if cancellations[i] == 0 and delays[i-1] > 10 and delays[i] == 0 and delays[i-1] - delays[i] > threshold:
             if i < len(delays) - 1:
                 delays[i] = (delays[i-1] + delays[i+1]) // 2
             else:
