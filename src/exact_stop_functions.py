@@ -45,7 +45,7 @@ def add_columns(candidate_transfers, destination):
         .apply(lambda arrival_lst: arrival_lst[0])
     candidate_transfers['cancellation_inbound'] = candidate_transfers.apply(
         lambda tp: tp['cancellation_x'][-1] != 0 \
-                   | tp['cancellation_x'][tp['origin_idx']] != 0,
+                   or tp['cancellation_x'][tp['origin_idx']] != 0,
         axis=1
     )
     candidate_transfers['cancellation_outbound'] = candidate_transfers.apply(
