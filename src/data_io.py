@@ -54,3 +54,24 @@ def load_incoming_outgoing_conns():
         print("Could not find the train database files.")
         print("Please make sure you ran the preprocessing script first.")
         raise
+
+
+def load_station_subset():
+    """
+    Returns a python set containing a hand-selected list of stations,
+    for which some kind of analysis should be performed exclusively.
+
+    Returns:
+    - station_subset: Set containing the station names as strings
+    """
+    filepath = os.path.join(DATA_DIR, 'station_subset.json')
+    try:
+        with open(filepath, 'r', encoding='utf-8') as file:
+            return set(json.loads(file.read()))
+    except FileNotFoundError:
+        print("Could not find the station subset json file.")
+        print(f"It should be located at {filepath}.")
+        print("It should be contained in the git repo.")
+        print("If the file is not present, \
+                ensure you didn't accidentally delete it.")
+        raise

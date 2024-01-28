@@ -18,14 +18,15 @@ import data_io
 
 ParallelPandas.initialize(n_cpu=6, split_factor=3, disable_pr_bar=False, show_vmem=True)
 USE_SUBSET = False
-station_subset = {'Essen Hbf', 'Leipzig Hbf', 'Magdeburg Hbf', 'Hamburg Hbf', 'Kiel Hbf', 'Stuttgart Hbf', 'Potsdam Hbf'
-    , 'Berlin Hbf', 'Erfurt Hbf', 'Hannover Hbf', 'Köln Hbf', 'Schwerin Hbf', 'München Hbf', 'Düsseldorf Hbf'
-    , 'Duisburg Hbf', 'Dresden Hbf', 'Mainz Hbf', 'Bremen Hbf', 'Saarbrücken Hbf', 'Dortmund Hbf', 'Karlsruhe Hbf'
-    , 'Nürnberg Hbf', 'Wiesbaden Hbf', 'Köln Hbf'}
-pd.options.mode.chained_assignment = None
-
+station_subset = data_io.load_station_subset()
 incoming, outgoing = data_io.load_incoming_outgoing_conns()
 excluded_pairs = load_excluded_pairs()
+
+# This is here to silence the warnings regarding chained assignment
+# that also display in the other experiments.
+# The warning should be a false positive,
+# and here it is silenced to allow for a progress bar to be shown.
+pd.options.mode.chained_assignment = None
 
 all_gains = general.find_gains_per_next_stop(incoming, outgoing)
 median_gain = {}

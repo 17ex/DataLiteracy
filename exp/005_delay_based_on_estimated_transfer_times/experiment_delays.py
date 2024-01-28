@@ -15,13 +15,7 @@ import general_functions as general
 import exact_stop_functions as exact_stop
 import data_io
 
-# TODO
-# Move subset to text file, load function for it in data_tools
-station_subset = ['Essen Hbf', 'Leipzig Hbf', 'Magdeburg Hbf', 'Hamburg Hbf', 'Kiel Hbf', 'Stuttgart Hbf', 'Potsdam Hbf'
-    , 'Berlin Hbf', 'Erfurt Hbf', 'Hannover Hbf', 'Köln Hbf', 'Schwerin Hbf', 'München Hbf', 'Düsseldorf Hbf'
-    , 'Duisburg Hbf', 'Dresden Hbf', 'Mainz Hbf', 'Bremen Hbf', 'Saarbrücken Hbf', 'Dortmund Hbf', 'Karlsruhe Hbf'
-    , 'Nürnberg Hbf', 'Wiesbaden Hbf', 'Köln Hbf']
-
+station_subset = data_io.load_station_subset()
 incoming, outgoing = data_io.load_incoming_outgoing_conns()
 excluded_pairs = load_excluded_pairs()
 

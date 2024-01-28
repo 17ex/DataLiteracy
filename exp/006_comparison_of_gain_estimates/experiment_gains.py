@@ -15,15 +15,7 @@ import general_functions as general
 import exact_stop_functions as exact_stop
 import data_io
 
-station_subset_in = ['Essen Hbf', 'Leipzig Hbf', 'Magdeburg Hbf', 'Hamburg Hbf', 'Kiel Hbf', 'Stuttgart Hbf', 'Potsdam Hbf'
-    , 'Berlin Hbf', 'Erfurt Hbf', 'Hannover Hbf', 'Köln Hbf', 'Schwerin Hbf', 'München Hbf', 'Düsseldorf Hbf'
-    , 'Duisburg Hbf', 'Dresden Hbf', 'Mainz Hbf', 'Bremen Hbf', 'Saarbrücken Hbf', 'Dortmund Hbf', 'Karlsruhe Hbf'
-    , 'Nürnberg Hbf', 'Wiesbaden Hbf', 'Köln Hbf']
-station_subset_out = ['Essen Hbf', 'Leipzig Hbf', 'Magdeburg Hbf', 'Hamburg Hbf', 'Kiel Hbf', 'Stuttgart Hbf', 'Potsdam Hbf'
-    , 'Berlin Hbf', 'Erfurt Hbf', 'Hannover Hbf', 'Köln Hbf', 'Schwerin Hbf', 'München Hbf', 'Düsseldorf Hbf'
-    , 'Duisburg Hbf', 'Dresden Hbf', 'Mainz Hbf', 'Bremen Hbf', 'Saarbrücken Hbf', 'Dortmund Hbf', 'Karlsruhe Hbf'
-    , 'Nürnberg Hbf', 'Wiesbaden Hbf', 'Köln Hbf']
-
+station_subset = data_io.load_station_subset()
 incoming, outgoing = data_io.load_incoming_outgoing_conns()
 excluded_pairs = load_excluded_pairs()
 
@@ -51,7 +43,7 @@ unique_stations_in.remove('Frankfurt(Main)Hbf')
 unique_stations_out.remove('Frankfurt(Main)Hbf')
 
 for origin in unique_stations_in:
-    if origin not in station_subset_in:
+    if origin not in station_subset:
         continue
     # do some pre-calculations for the incoming list
     incoming_from_origin = incoming[incoming['origin'].apply(lambda x: any(origin == value for value in x))]
@@ -66,7 +58,7 @@ for origin in unique_stations_in:
     print(origin)
     for destination in unique_stations_out:
         if (
-                destination not in station_subset_out
+                destination not in station_subset
                 or origin == destination
                 or (origin, destination) in excluded_pairs
            ):
