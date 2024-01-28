@@ -24,17 +24,9 @@ station_subset_out = ['Essen Hbf', 'Leipzig Hbf', 'Magdeburg Hbf', 'Hamburg Hbf'
     , 'Duisburg Hbf', 'Dresden Hbf', 'Mainz Hbf', 'Bremen Hbf', 'Saarbrücken Hbf', 'Dortmund Hbf', 'Karlsruhe Hbf'
     , 'Nürnberg Hbf', 'Wiesbaden Hbf', 'Köln Hbf']
 
-DATA_DIR = os.path.join(REPO_ROOT, "dat", "train_data", "frankfurt_hbf")
-with open(os.path.join(DATA_DIR, 'incoming.pkl'), 'rb') as file:
-    incoming = pickle.load(file)
-
-with open(os.path.join(DATA_DIR + 'outgoing.pkl'), 'rb') as file:
-    outgoing = pickle.load(file)
-
+incoming, outgoing = data_io.load_incoming_outgoing_conns()
 excluded_pairs = load_excluded_pairs()
 
-incoming['date'] = pd.to_datetime(incoming['date'])
-outgoing['date'] = pd.to_datetime(outgoing['date'])
 all_gains = general.find_gains_per_next_stop(incoming, outgoing)
 average_gain = {}
 pos_avg_gain = {}

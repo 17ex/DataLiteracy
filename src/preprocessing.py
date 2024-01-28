@@ -130,6 +130,9 @@ print(f"Removed {len_out - len(outgoing)} wrongly merged incoming trains.")
 incoming = add_directions(incoming, True, debug=False)
 outgoing = add_directions(outgoing, False, debug=False)
 
+incoming['date'] = pd.to_datetime(incoming['date'])
+outgoing['date'] = pd.to_datetime(outgoing['date'])
+
 incoming.to_pickle(os.path.join(OUTPUT_DIR, "incoming.pkl"))
 outgoing.to_pickle(os.path.join(OUTPUT_DIR, "outgoing.pkl"))
 
