@@ -13,6 +13,7 @@ sys.path.insert(1, os.path.join(REPO_ROOT, 'src'))
 from data_tools import format_station_name_file, load_excluded_pairs
 import general_functions as general
 import exact_stop_functions as exact_stop
+import data_io
 
 station_subset_in = ['Essen Hbf', 'Leipzig Hbf', 'Magdeburg Hbf', 'Hamburg Hbf', 'Kiel Hbf', 'Stuttgart Hbf', 'Potsdam Hbf'
     , 'Berlin Hbf', 'Erfurt Hbf', 'Hannover Hbf', 'Köln Hbf', 'Schwerin Hbf', 'München Hbf', 'Düsseldorf Hbf'
@@ -24,13 +25,6 @@ station_subset_out = ['Essen Hbf', 'Leipzig Hbf', 'Magdeburg Hbf', 'Hamburg Hbf'
     , 'Nürnberg Hbf', 'Wiesbaden Hbf', 'Köln Hbf']
 
 DATA_DIR = os.path.join(REPO_ROOT, "dat", "train_data", "frankfurt_hbf")
-OUTPUT_DIR = os.path.join(REPO_ROOT, "dat", "results", "gains")
-Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
-Path(os.path.join(OUTPUT_DIR, 'no_wait/')).mkdir(parents=True, exist_ok=True)
-Path(os.path.join(OUTPUT_DIR, 'avg_gain/')).mkdir(parents=True, exist_ok=True)
-Path(os.path.join(OUTPUT_DIR, 'zero_gain/')).mkdir(parents=True, exist_ok=True)
-Path(os.path.join(OUTPUT_DIR, 'avg_pos_gain/')).mkdir(parents=True, exist_ok=True)
-Path(os.path.join(OUTPUT_DIR, 'theoretical_max_gain/')).mkdir(parents=True, exist_ok=True)
 with open(os.path.join(DATA_DIR, 'incoming.pkl'), 'rb') as file:
     incoming = pickle.load(file)
 
@@ -111,24 +105,24 @@ for origin in unique_stations_in:
         delay_all_zero_gain[destination] = delay_zero_gain
         delay_all_avg_pos_gain[destination] = delay_avg_pos_gain
         delay_all_theoretical_max_gain[destination] = delay_theoretical_max_gain
-        # TODO make a save as json function in data_tools that does this.
-    with open(os.path.join(OUTPUT_DIR, 'no_wait/',
-                           f'delay_{format_station_name_file(origin)}.json'),
-              'w') as file:
-        json.dump(delay_all_no_wait, file)
-    with open(os.path.join(OUTPUT_DIR, 'avg_gain/',
-                           f'delay_{format_station_name_file(origin)}.json'),
-              'w') as file:
-        json.dump(delay_all_avg_gain, file)
-    with open(os.path.join(OUTPUT_DIR, 'zero_gain/',
-                           f'delay_{format_station_name_file(origin)}.json'),
-              'w') as file:
-        json.dump(delay_all_zero_gain, file)
-    with open(os.path.join(OUTPUT_DIR, 'avg_pos_gain/',
-                           f'delay_{format_station_name_file(origin)}.json'),
-              'w') as file:
-        json.dump(delay_all_avg_pos_gain, file)
-    with open(os.path.join(OUTPUT_DIR, 'theoretical_max_gain/',
-                           f'delay_{format_station_name_file(origin)}.json'),
-              'w') as file:
-        json.dump(delay_all_theoretical_max_gain, file)
+
+        data_io.write_json(delay_all_no_wait,
+                           f'delay_006_{format_station_name_file(origin)}.json',
+                           'results', 'no_wait'
+                           )
+        data_io.write_json(delay_all_avg_gain,
+                           f'delay_006_{format_station_name_file(origin)}.json',
+                           'results', 'avg_gain'
+                           )
+        data_io.write_json(delay_all_zero_gain,
+                           f'delay_006_{format_station_name_file(origin)}.json',
+                           'results', 'zero_gain'
+                           )
+        data_io.write_json(delay_all_avg_pos_gain,
+                           f'delay_006_{format_station_name_file(origin)}.json',
+                           'results', 'avg_pos_gain'
+                           )
+        data_io.write_json(delay_all_theoretical_max_gain,
+                           f'delay_006_{format_station_name_file(origin)}.json',
+                           'results', 'theoretical_max_gain'
+                           )

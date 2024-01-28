@@ -13,6 +13,7 @@ sys.path.insert(1, os.path.join(REPO_ROOT, 'src'))
 from data_tools import format_station_name_file, load_excluded_pairs
 import general_functions as general
 import exact_stop_functions as exact_stop
+import data_io
 
 # TODO
 # Move subset to text file, load function for it in data_tools
@@ -22,8 +23,6 @@ station_subset = ['Essen Hbf', 'Leipzig Hbf', 'Magdeburg Hbf', 'Hamburg Hbf', 'K
     , 'Nürnberg Hbf', 'Wiesbaden Hbf', 'Köln Hbf']
 
 DATA_DIR = os.path.join(REPO_ROOT, "dat", "train_data", "frankfurt_hbf")
-OUTPUT_DIR = os.path.join(REPO_ROOT, "dat", "results", "delay")
-Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 # TODO move this to data_tools
 with open(os.path.join(DATA_DIR, 'incoming.pkl'), 'rb') as file:
     incoming = pickle.load(file)
@@ -100,8 +99,6 @@ for origin in unique_stations_in:
         print(destination)
         delay = exact_stop.reachable_transfers(incoming_from_origin, outgoing, origin, destination, gains=average_gain)
         delay_all[destination] = delay
-    # TODO specify encoding here
-    with open(os.path.join(OUTPUT_DIR,
-                           f'delay_005_{format_station_name_file(origin)}.json'),
-              'w') as file:
-        json.dump(delay_all, file)
+    data_io.write_json(delay_all,
+                       f'delay_005_{format_station_name_file(origin)}.json',
+                       'results', 'delay')

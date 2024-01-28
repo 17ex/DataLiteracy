@@ -14,6 +14,7 @@ sys.path.insert(1, os.path.join(REPO_ROOT, 'src'))
 from data_tools import format_station_name_file, load_excluded_pairs
 import general_functions as general
 import exact_stop_functions as exact_stop
+import data_io
 
 ParallelPandas.initialize(n_cpu=6, split_factor=3, disable_pr_bar=False, show_vmem=True)
 USE_SUBSET = False
@@ -24,8 +25,6 @@ station_subset = {'Essen Hbf', 'Leipzig Hbf', 'Magdeburg Hbf', 'Hamburg Hbf', 'K
 pd.options.mode.chained_assignment = None
 
 DATA_DIR = os.path.join(REPO_ROOT, "dat", "train_data", "frankfurt_hbf")
-OUTPUT_DIR = os.path.join(REPO_ROOT, "dat", "results", "delay")
-Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 with open(os.path.join(DATA_DIR, 'incoming.pkl'), 'rb') as file:
     incoming = pickle.load(file)
 
@@ -114,10 +113,9 @@ def calculate_delays_per_origin(origin):
                origin,
                destination,
                gains=average_gain)
-    with open(os.path.join(OUTPUT_DIR,
-                           f'delay_007_{format_station_name_file(origin)}.json'),
-                           'w') as file:
-        json.dump(delay_all, file)
+    data_io.write_json(delay_all,
+                       f'delay_007_{format_station_name_file(origin)}.json',
+                       'results', 'delay')
     return None
 
 
