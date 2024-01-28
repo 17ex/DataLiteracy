@@ -5,17 +5,20 @@ import numpy as np
 from pathlib import Path
 from data_tools import *
 import requests
+import os
 
-DATA_DIR = "../../dat/"
-INPUT_DIR = DATA_DIR + "raw/"
-OUTPUT_DIR = DATA_DIR + "train_data/frankfurt_hbf/"
+REPO_ROOT = os.path.realpath(os.path.join(os.path.dirname(__file__), os.pardir))
+DATA_DIR = os.path.join(REPO_ROOT, "dat")
+INPUT_DIR = os.path.join(DATA_DIR, "raw")
+OUTPUT_DIR = os.path.join(DATA_DIR, "train_data", "frankfurt_hbf")
 Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 
-
-data_in = pd.read_csv(INPUT_DIR + "scraped_incoming_Frankfurt_Hbf.csv",
+data_in = pd.read_csv(os.path.join(INPUT_DIR,
+                                   "scraped_incoming_Frankfurt_Hbf.csv"),
                       names=['origin', 'destination', 'date', 'departure',
                              'arrival', 'train', 'delay', 'cancellation'])
-data_out = pd.read_csv(INPUT_DIR + "scraped_outgoing_Frankfurt_Hbf.csv",
+data_out = pd.read_csv(os.path.join(INPUT_DIR,
+                                    "scraped_outgoing_Frankfurt_Hbf.csv"),
                        names=['origin', 'destination', 'date', 'departure',
                               'arrival', 'train', 'delay', 'cancellation'])
 
@@ -127,12 +130,12 @@ print(f"Removed {len_out - len(outgoing)} wrongly merged incoming trains.")
 incoming = add_directions(incoming, True, debug=False)
 outgoing = add_directions(outgoing, False, debug=False)
 
-incoming.to_pickle(OUTPUT_DIR + "incoming.pkl")
-outgoing.to_pickle(OUTPUT_DIR + "outgoing.pkl")
+incoming.to_pickle(os.path.join(OUTPUT_DIR, "incoming.pkl"))
+outgoing.to_pickle(os.path.join(OUTPUT_DIR, "outgoing.pkl"))
 
 
 # Download file containing train station coordinates
-coordinates_file = Path(DATA_DIR + "coordinates.csv")
+coordinates_file = Path(os.path.join(DATA_DIR, "coordinates.csv"))
 if not coordinates_file.is_file():
     coordinates_file_url = "https://download-data.deutschebahn.com/static/datasets/haltestellen/D_Bahnhof_2020_alle.CSV"
     print(f"Downloading station files from: {coordinates_file_url}")
@@ -149,7 +152,8 @@ else:
 
 
 # Create list of excluded origin, destination pairs
-exclusion_file = Path(DATA_DIR + "excluded_pairs.csv")
+# TODO move this check + filename to data_tools
+exclusion_file = Path(os.path.join(DATA_DIR, "excluded_pairs.csv"))
 if not exclusion_file.is_file():
     print("Determine station pairs to exclude from the analysis")
     write_excluded_station_pairs(

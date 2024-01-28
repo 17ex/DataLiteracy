@@ -10,6 +10,7 @@ from datetime import datetime
 import numpy as np
 from pathlib import Path
 import math
+import os
 
 
 def str_to_date(s):
@@ -266,12 +267,16 @@ def write_excluded_station_pairs(station_coords, stations, filename):
         .to_csv(filename, index=False)
 
 
-def load_excluded_pairs(data_dir):
+def load_excluded_pairs():
     """
     Returns a set containing tuples (origin, destination)
     of station names that should be ignored in the analysis.
     """
+    filename = os.path.realpath(os.path.join(os.path.dirname(__file__),
+                                             os.pardir,
+                                             "dat",
+                                             "excluded_pairs.csv"))
     excluded_pairs = set()
-    for _, origin, destination in pd.read_csv(data_dir + "excluded_pairs.csv").itertuples():
+    for _, origin, destination in pd.read_csv(filename).itertuples():
         excluded_pairs.add((origin, destination))
     return excluded_pairs

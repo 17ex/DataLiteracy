@@ -7,8 +7,10 @@ from parallel_pandas import ParallelPandas
 import sys
 import os
 
-sys.path.insert(1, os.path.realpath(os.path.join(os.path.dirname(__file__),
-                                                 os.pardir, os.pardir, 'src')))
+REPO_ROOT = os.path.realpath(os.path.join(os.path.dirname(__file__),
+                                          os.pardir,
+                                          os.pardir))
+sys.path.insert(1, os.path.join(REPO_ROOT, 'src'))
 from data_tools import format_station_name_file, load_excluded_pairs
 import general_functions as general
 import exact_stop_functions as exact_stop
@@ -21,17 +23,16 @@ station_subset = {'Essen Hbf', 'Leipzig Hbf', 'Magdeburg Hbf', 'Hamburg Hbf', 'K
     , 'Nürnberg Hbf', 'Wiesbaden Hbf', 'Köln Hbf'}
 pd.options.mode.chained_assignment = None
 
-DATA_DIR = "../../dat/train_data/frankfurt_hbf/"
-SAVE_DIR = "../../dat/results/delay/"
-Path(DATA_DIR).mkdir(parents=True, exist_ok=True)
-Path(SAVE_DIR).mkdir(parents=True, exist_ok=True)
-with open(DATA_DIR + 'incoming.pkl', 'rb') as file:
+DATA_DIR = os.path.join(REPO_ROOT, "dat", "train_data", "frankfurt_hbf")
+OUTPUT_DIR = os.path.join(REPO_ROOT, "dat", "results", "delay")
+Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
+with open(os.path.join(DATA_DIR, 'incoming.pkl'), 'rb') as file:
     incoming = pickle.load(file)
 
-with open(DATA_DIR + 'outgoing.pkl', 'rb') as file:
+with open(os.path.join(DATA_DIR, 'outgoing.pkl'), 'rb') as file:
     outgoing = pickle.load(file)
 
-excluded_pairs = load_excluded_pairs("../../dat/")
+excluded_pairs = load_excluded_pairs()
 
 incoming['date'] = pd.to_datetime(incoming['date'])
 outgoing['date'] = pd.to_datetime(outgoing['date'])
@@ -45,7 +46,6 @@ for key in all_gains.keys():
     average_gain[key] = np.mean(all_gains[key])
     max_gain[key] = np.amax(all_gains[key])
     positive_numbers = [num for num in all_gains[key] if num > 0]
-    pos_avg_gain[key] = np.mean(positive_numbers)
     # TODO properly handle case when there are no direct connections
     # (when the above are empty or 0)
 
@@ -114,7 +114,9 @@ def calculate_delays_per_origin(origin):
                origin,
                destination,
                gains=average_gain)
-    with open(SAVE_DIR + f'delay_007_{format_station_name_file(origin)}.json', 'w') as file:
+    with open(os.path.join(OUTPUT_DIR,
+                           f'delay_007_{format_station_name_file(origin)}.json'),
+                           'w') as file:
         json.dump(delay_all, file)
     return None
 

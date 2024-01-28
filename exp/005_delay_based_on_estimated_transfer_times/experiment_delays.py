@@ -6,29 +6,34 @@ from pathlib import Path
 import sys
 import os
 
-sys.path.insert(1, os.path.realpath(os.path.join(os.path.dirname(__file__),
-                                                 os.pardir, os.pardir, 'src')))
+REPO_ROOT = os.path.realpath(os.path.join(os.path.dirname(__file__),
+                                          os.pardir,
+                                          os.pardir))
+sys.path.insert(1, os.path.join(REPO_ROOT, 'src'))
 from data_tools import format_station_name_file, load_excluded_pairs
 import general_functions as general
 import exact_stop_functions as exact_stop
 
+# TODO
+# Move subset to text file, load function for it in data_tools
 station_subset = ['Essen Hbf', 'Leipzig Hbf', 'Magdeburg Hbf', 'Hamburg Hbf', 'Kiel Hbf', 'Stuttgart Hbf', 'Potsdam Hbf'
     , 'Berlin Hbf', 'Erfurt Hbf', 'Hannover Hbf', 'Köln Hbf', 'Schwerin Hbf', 'München Hbf', 'Düsseldorf Hbf'
     , 'Duisburg Hbf', 'Dresden Hbf', 'Mainz Hbf', 'Bremen Hbf', 'Saarbrücken Hbf', 'Dortmund Hbf', 'Karlsruhe Hbf'
     , 'Nürnberg Hbf', 'Wiesbaden Hbf', 'Köln Hbf']
 
-DATA_DIR = "../../dat/train_data/frankfurt_hbf/"
-SAVE_DIR = "../../dat/results/delay/"
-Path(DATA_DIR).mkdir(parents=True, exist_ok=True)
-Path(SAVE_DIR).mkdir(parents=True, exist_ok=True)
-with open(DATA_DIR + 'incoming.pkl', 'rb') as file:
+DATA_DIR = os.path.join(REPO_ROOT, "dat", "train_data", "frankfurt_hbf")
+OUTPUT_DIR = os.path.join(REPO_ROOT, "dat", "results", "delay")
+Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
+# TODO move this to data_tools
+with open(os.path.join(DATA_DIR, 'incoming.pkl'), 'rb') as file:
     incoming = pickle.load(file)
 
-with open(DATA_DIR + 'outgoing.pkl', 'rb') as file:
+with open(os.path.join(DATA_DIR, 'outgoing.pkl'), 'rb') as file:
     outgoing = pickle.load(file)
 
-excluded_pairs = load_excluded_pairs("../../dat/")
+excluded_pairs = load_excluded_pairs()
 
+# TODO move this to data_tools
 incoming['date'] = pd.to_datetime(incoming['date'])
 outgoing['date'] = pd.to_datetime(outgoing['date'])
 all_gains = general.find_gains_per_next_stop(incoming, outgoing)
@@ -47,6 +52,7 @@ for key in all_gains.keys():
 
 directions = general.get_directions()
 
+# TODO move this to data_tools (optional args incoming, outgoing)
 unique_stations_in = set()
 unique_stations_out = set()
 for sublist in incoming['origin']:
@@ -94,5 +100,8 @@ for origin in unique_stations_in:
         print(destination)
         delay = exact_stop.reachable_transfers(incoming_from_origin, outgoing, origin, destination, gains=average_gain)
         delay_all[destination] = delay
-    with open(SAVE_DIR + f'delay_{format_station_name_file(origin)}.json', 'w') as file:
+    # TODO specify encoding here
+    with open(os.path.join(OUTPUT_DIR,
+                           f'delay_005_{format_station_name_file(origin)}.json'),
+              'w') as file:
         json.dump(delay_all, file)

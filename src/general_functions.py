@@ -141,6 +141,8 @@ def get_directions():
     - directions (dict): Contains the 5 directions as keys and lists containing
         the corresponding station names as values
     """
+    # TODO
+    # Save this in a text file, move this function that loads it to data_tools
     directions = {
         'South': ['Weinheim(Bergstr)Hbf', 'Bruchsal', 'Karlsruhe-Durlach',
                   'Günzburg', 'Bensheim', 'Mannheim Hbf', 'Stuttgart Hbf',
