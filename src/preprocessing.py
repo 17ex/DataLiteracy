@@ -27,12 +27,12 @@ data_out = pd.read_csv(os.path.join(INPUT_DIR,
 print(f"Number of incoming datapoints: {len(data_in)}")
 print(f"Number of outgoing datapoints: {len(data_out)}")
 
-print("Formatting dates and times")
 delays_in = data_in[pd.isna(data_in["cancellation"])]
 delays_out = data_out[pd.isna(data_out["cancellation"])]
 all_delays = np.append(np.array(delays_in["delay"]), np.array(delays_out["delay"]))
 print(f"Mean delay: {np.mean(all_delays)}")
 
+print("Formatting dates and times")
 format_datetimes(data_in)
 format_datetimes(data_out)
 
@@ -41,6 +41,7 @@ data_out = data_out.sort_values(["date", "arrival"])
 
 # Merge individual rows (stops of a train) together into one train line,
 # with lists specifying the stops, delays, etc.
+print("Group data by trains")
 result_in = data_in.groupby(['train', 'date', 'arrival', 'destination'])[
         ['origin', 'departure', 'delay', 'cancellation']
         ].agg(list).reset_index()
@@ -49,36 +50,16 @@ result_out = data_out.groupby(['train', 'date', 'departure', 'origin'])[
         ].agg(list).reset_index()
 
 
-# TODO remove this
-# Interpolate delays for data points with 0 delay
-# when it is definitely an error in the data.
-changes = result_out.apply(fix_delays, axis=1)
-result_out['delay'] = changes.apply(lambda x: x[0])
-total_changes = changes.apply(lambda x: x[1]).sum()
-
-# Count total entries
-num_entries = 0
-for delay_list in result_out["delay"]:
-    num_entries += len(delay_list)
-
-print(f"Set {total_changes} of {num_entries} wrong 0 delays to an interpolated value.")
-
-# TODO remove this
-# Remove entries from the df that don't have the same delay
-# for every incoming train per station, as there probably is
-# something wrong with the data point.
-initial_incoming_length = len(result_in)
-in_clean_delays = remove_unequal_delays(result_in)
-print(f"Removed {initial_incoming_length - len(result_in)} incoming trains with varying delays.")
-
 # Collapse and/or clean up lists
-in_clean_delays.loc[:, 'delay'] = in_clean_delays.loc[:, 'delay'] \
+pd.options.mode.chained_assignment = None
+result_in.loc[:, 'delay'] = result_in.loc[:, 'delay'] \
         .apply(lambda l: l[0])
-in_clean_delays.loc[:, 'cancellation'] = \
-        in_clean_delays.loc[:, 'cancellation'].apply(cancellation_to_int_lst)
+result_in.loc[:, 'cancellation'] = \
+        result_in.loc[:, 'cancellation'].apply(cancellation_to_int_lst)
 result_out.loc[:, 'cancellation'] = \
         result_out.loc[:, 'cancellation'].apply(cancellation_to_int_lst)
-in_clean = in_clean_delays.infer_objects()
+pd.options.mode.chained_assignment = 'warn'
+in_clean = result_in.infer_objects()
 out_clean = result_out.infer_objects()
 
 # Assign ids to every individual train

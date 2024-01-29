@@ -51,21 +51,6 @@ def format_datetimes(df):
     df.loc[:, 'date'] = df.loc[:, 'departure'].apply(lambda d: d.date())
 
 
-def all_equal(lst):
-    return len(set(lst)) == 1
-
-
-def remove_unequal_delays(df):
-    """
-    This should remove incoming trains from the dataset for which,
-    after merging into one train with lists containing each station,
-    the lists with the delay at Frankfurt Hbf contain different values,
-    as this is impossible (it is the same train) and the data point
-    must be wrong.
-    """
-    return df[df['delay'].apply(all_equal)]
-
-
 def cancellation_to_int(s):
     """
     Returns 0 if input is na (no cancellation),
@@ -88,28 +73,6 @@ def d_id_to_int(d):
         return -1
     else:
         return int(d)
-
-
-def fix_delays(row):
-    change_count = 0
-    delays = row['delay']
-    arrivals = row['arrival']
-    cancellations = row['cancellation']
-    for i in range(1, len(delays)):
-        # Calculate time difference in minutes
-        time_diff_minutes = (arrivals[i] - arrivals[i-1]).total_seconds() / 60
-        # Between two stations, a train in Germany can make up at most 27% of the time
-        # that it takes to get from one to the other.
-        # We assume that anything more than that is an error in the data, and cap it.
-        threshold = 0.27 * time_diff_minutes
-
-        if cancellations[i] == 0 and delays[i-1] > 10 and delays[i] == 0 and delays[i-1] - delays[i] > threshold:
-            if i < len(delays) - 1:
-                delays[i] = (delays[i-1] + delays[i+1]) // 2
-            else:
-                delays[i] = delays[i-1]
-            change_count += 1
-    return delays, change_count
 
 
 def add_directions(train_data, is_incoming, debug=False):
@@ -186,6 +149,7 @@ def add_directions(train_data, is_incoming, debug=False):
     return train_data
 
 
+# TODO move to data_io
 def format_station_name_file(input_string):
     output_string = input_string.replace('ä', 'ae').replace('ö', 'oe').replace('ü', 'ue')
     output_string = output_string.replace('/', '-')
@@ -236,6 +200,7 @@ def pair_exclusion_criterion(origin_coords, destination_coords, frankfurt_coords
     )
 
 
+# TODO just return the pairs, move write to data_io
 def write_excluded_station_pairs(station_coords, stations, filename):
     station_coords = station_coords[station_coords['NAME'].isin(stations)]
     frankfurt_coords = station_coords[
