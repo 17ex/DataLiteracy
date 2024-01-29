@@ -75,7 +75,7 @@ def d_id_to_int(d):
         return int(d)
 
 
-def add_directions(train_data, is_incoming, debug=False):
+def determine_train_direction(train_data, is_incoming, debug=False):
     """
     Determine the direction a train is taking.
     Directions are one of the five:
@@ -86,7 +86,7 @@ def add_directions(train_data, is_incoming, debug=False):
     directions = data_io.load_directions()
     direction_list = [""] * len(train_data)
     remove_indices = set()
-    not_found = found = airport = count_impossible = 0
+    not_found = found = airport = count_unclear = 0
 
     for index, train_out in enumerate(train_data.itertuples()):
         direction_set = set()
@@ -102,25 +102,21 @@ def add_directions(train_data, is_incoming, debug=False):
                 if dest in stations:
                     direction_set.add(direction)
                     break
-
-        if debug:  
-            if "South" in direction_set and ("West" in direction_set or "North" in direction_set or "North East" in direction_set):
-                print("############")
-                print(index)
-                print(stops)
-                print(train_out.departure)
-                print(train_out.arrival)
-                count_impossible += 1
-                
-            if "East" in direction_set and ("West" in direction_set or "North" in direction_set):
-                print("############")
-                print(index)
-                print(stops)
-                print(train_out.departure)
-                print(train_out.arrival)
-                count_impossible += 1
-                
-                continue
+        if ("South" in direction_set
+            and ("West" in direction_set
+                 or "North" in direction_set
+                 or "North East" in direction_set)
+            or ("East" in direction_set
+                and ("West" in direction_set
+                     or "North" in direction_set))):
+            if debug:
+                    print("############")
+                    print(index)
+                    print(stops)
+                    print(train_out.departure)
+                    print(train_out.arrival)
+                    count_unclear += 1
+            direction_set = set()
 
         direction_list[index] = next(iter(direction_set), 'None')
         if direction_list[index] == 'None':
@@ -129,21 +125,9 @@ def add_directions(train_data, is_incoming, debug=False):
                 airport += 1
         else:
             found += 1
-
     train_data['direction'] = direction_list
-
-    # Remove indices found while debugging
-    # TODO
-    # How were these indices found?
-    # Replace with checks instead of magic numbers
-    if is_incoming:
-        remove_indices.update([5415, 37302, 35381, 35378, 35377, 35374, 110987, 88439])
-    else:
-        remove_indices.update([153821, 153509, 125229, 125191, 96682, 92183])
-    train_data = train_data.drop(index=remove_indices)
-
     if debug:
-        print(count_impossible)
+        print(count_unclear)
     if is_incoming:
         print(f"Set directions of {found} incoming trains.")
         print(f"Did not find clear direction of {not_found} trains.")
@@ -153,6 +137,45 @@ def add_directions(train_data, is_incoming, debug=False):
         print(f"Did not find clear direction of {not_found} trains.")
         print(f"Out of those, {airport} trains start at Frankfurt airport without other stops.")
     return train_data
+
+
+def fix_duplicate_frankfurt(data_in, data_out):
+    data_in = data_in[data_in['origin'] != 'Frankfurt(Main)Hbf']
+    data_out = data_out[data_out['destination'] != 'Frankfurt(Main)Hbf']
+    return data_in, data_out
+
+
+def remove_wrong_incoming_trains(incoming):
+    """
+    Remove trains from the dataset that contain wrong datapoints.
+    """
+    is_wrong = incoming['origin'].apply(
+            lambda origins:
+            len(origins) > 0
+            and "Frankfurt" not in origins[-1]
+            and any(map(lambda origin: "Frankfurt" in origin, origins)))
+    print(f"Dropping {sum(is_wrong)} wrong incoming trains from the dataset.")
+    return incoming[~is_wrong]
+
+
+def remove_wrong_outgoing_trains(outgoing):
+    """
+    Remove trains from the dataset that contain wrong datapoints
+    found by manual inspection.
+    """
+    out_ids_of_wrong_trains = \
+        [
+            321822,
+            326938,
+            193134,
+            193205,
+            265197,
+            265739
+        ]
+    print(f"Dropping {len(out_ids_of_wrong_trains)} wrong outgoing \
+            trains from the dataset.")
+    return outgoing[outgoing['out_id'].apply(
+        lambda out_id: out_id not in out_ids_of_wrong_trains)]
 
 
 # TODO move to data_io

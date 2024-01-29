@@ -23,6 +23,7 @@ data_out = pd.read_csv(os.path.join(INPUT_DIR,
                                     "scraped_outgoing_Frankfurt_Hbf.csv"),
                        names=['origin', 'destination', 'date', 'departure',
                               'arrival', 'train', 'delay', 'cancellation'])
+data_in, data_out = fix_duplicate_frankfurt(data_in, data_out)
 
 print(f"Number of incoming datapoints: {len(data_in)}")
 print(f"Number of outgoing datapoints: {len(data_out)}")
@@ -112,8 +113,10 @@ outgoing['in_id'] = outgoing.loc[:, 'in_id'].apply(d_id_to_int).astype(int)
 print(f"Removed {len_in - len(incoming)} wrongly merged incoming trains.")
 print(f"Removed {len_out - len(outgoing)} wrongly merged incoming trains.")
 
-incoming = add_directions(incoming, True, debug=False)
-outgoing = add_directions(outgoing, False, debug=False)
+incoming = determine_train_direction(incoming, True, debug=True)
+outgoing = determine_train_direction(outgoing, False, debug=True)
+incoming = remove_wrong_incoming_trains(incoming)
+outgoing = remove_wrong_outgoing_trains(outgoing)
 
 incoming['date'] = pd.to_datetime(incoming['date'])
 outgoing['date'] = pd.to_datetime(outgoing['date'])
