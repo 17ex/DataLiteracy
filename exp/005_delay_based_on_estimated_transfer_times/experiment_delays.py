@@ -35,18 +35,7 @@ for key in all_gains.keys():
     # (when the above are empty or 0)
 
 directions = data_io.load_directions()
-
-# TODO move this to data_tools (optional args incoming, outgoing)
-unique_stations_in = set()
-unique_stations_out = set()
-for sublist in incoming['origin']:
-    unique_stations_in.update(sublist)
-
-for sublist in outgoing['destination']:
-    unique_stations_out.update(sublist)
-
-unique_stations_in.remove('Frankfurt(Main)Hbf')
-unique_stations_out.remove('Frankfurt(Main)Hbf')
+unique_stations_in, unique_stations_out, _ = data_io.load_unique_station_names()
 
 for origin in unique_stations_in:
     if origin not in station_subset:

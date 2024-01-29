@@ -4,6 +4,7 @@ from datetime import datetime
 import numpy as np
 from pathlib import Path
 from data_tools import *
+import data_io
 import requests
 import os
 
@@ -137,6 +138,9 @@ incoming.to_pickle(os.path.join(OUTPUT_DIR, "incoming.pkl"))
 outgoing.to_pickle(os.path.join(OUTPUT_DIR, "outgoing.pkl"))
 
 
+data_io.write_unique_station_names(incoming, outgoing)
+
+
 # Download file containing train station coordinates
 coordinates_file = Path(os.path.join(DATA_DIR, "coordinates.csv"))
 if not coordinates_file.is_file():
@@ -155,7 +159,7 @@ else:
 
 
 # Create list of excluded origin, destination pairs
-# TODO move this check + filename to data_tools
+# TODO Remove check for file existence, move to data_io
 exclusion_file = Path(os.path.join(DATA_DIR, "excluded_pairs.csv"))
 if not exclusion_file.is_file():
     print("Determine station pairs to exclude from the analysis")

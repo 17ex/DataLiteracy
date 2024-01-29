@@ -20,17 +20,7 @@ incoming, outgoing = data_io.load_incoming_outgoing_conns()
 excluded_pairs = load_excluded_pairs()
 
 directions = data_io.load_directions()
-
-unique_stations_in = set()
-unique_stations_out = set()
-for sublist in incoming['origin']:
-    unique_stations_in.update(sublist)
-
-for sublist in outgoing['destination']:
-    unique_stations_out.update(sublist)
-
-unique_stations_in.remove('Frankfurt(Main)Hbf')
-unique_stations_out.remove('Frankfurt(Main)Hbf')
+unique_stations_in, unique_stations_out, _ = data_io.load_unique_station_names()
 
 for origin in unique_stations_in:
     if origin not in station_subset:

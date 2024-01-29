@@ -43,21 +43,10 @@ for key in all_gains.keys():
 
 directions = data_io.load_directions()
 
-unique_stations_in = set()
-unique_stations_out = set()
+unique_stations_in, unique_stations_out, _ = data_io.load_unique_station_names()
 
 # Drop data we don't need
 del outgoing['origin']
-
-
-for sublist in incoming['origin']:
-    unique_stations_in.update(sublist)
-
-for sublist in outgoing['destination']:
-    unique_stations_out.update(sublist)
-
-unique_stations_in.remove('Frankfurt(Main)Hbf')
-unique_stations_out.remove('Frankfurt(Main)Hbf')
 
 if USE_SUBSET:
     unique_stations_in = unique_stations_in.difference(station_subset)
