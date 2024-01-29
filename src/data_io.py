@@ -52,7 +52,7 @@ def write_unique_station_names(incoming, outgoing):
     incoming['origin'].apply(lambda sl: unique_stations_in.update(sl))
     outgoing['destination'].apply(lambda sl: unique_stations_out.update(sl))
     unique_stations = unique_stations_in.union(unique_stations_out)
-    if 'Frankfurt(Main)Hbf' in unique_station_in:
+    if 'Frankfurt(Main)Hbf' in unique_stations_in:
         unique_stations_in.remove('Frankfurt(Main)Hbf')
     if 'Frankfurt(Main)Hbf' in unique_stations_out:
         unique_stations_out.remove('Frankfurt(Main)Hbf')
