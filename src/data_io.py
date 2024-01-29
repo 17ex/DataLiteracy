@@ -23,13 +23,10 @@ def write_json(content, basename, *dirs):
     - *dirs: directories in which to save the file
 
     """
-    out_dirname = DATA_DIR
-    for subdir in dirs:
-        out_dirname = os.path.join(out_dirname, subdir)
-    full_filename = os.path.join(out_dirname, basename)
+    out_dirname = os.path.join(DATA_DIR, *dirs)
     Path(out_dirname).mkdir(parents=True, exist_ok=True)
-    # TODO add file encoding
-    with open(full_filename, 'w') as file:
+    full_filename = os.path.join(out_dirname, basename)
+    with open(full_filename, 'w', encoding='utf-8') as file:
         json.dump(content, file)
 
 
