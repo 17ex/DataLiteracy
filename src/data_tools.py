@@ -103,17 +103,23 @@ def add_directions(train_data, is_incoming, debug=False):
                     direction_set.add(direction)
                     break
 
-        if debug:
+        if debug:  
             if "South" in direction_set and ("West" in direction_set or "North" in direction_set or "North East" in direction_set):
-                print(stops)
-                count_impossible += 1
+                print("############")
                 print(index)
-            if "East" in direction_set and ("West" in direction_set or "North" in direction_set):
                 print(stops)
                 print(train_out.departure)
                 print(train_out.arrival)
                 count_impossible += 1
+                
+            if "East" in direction_set and ("West" in direction_set or "North" in direction_set):
+                print("############")
                 print(index)
+                print(stops)
+                print(train_out.departure)
+                print(train_out.arrival)
+                count_impossible += 1
+                
                 continue
 
         direction_list[index] = next(iter(direction_set), 'None')
@@ -131,9 +137,9 @@ def add_directions(train_data, is_incoming, debug=False):
     # How were these indices found?
     # Replace with checks instead of magic numbers
     if is_incoming:
-        remove_indices.update([35371, 35372, 88424])
+        remove_indices.update([5415, 37302, 35381, 35378, 35377, 35374, 110987, 88439])
     else:
-        remove_indices.update([125187, 125225, 153510, 153822])
+        remove_indices.update([153821, 153509, 125229, 125191, 96682, 92183])
     train_data = train_data.drop(index=remove_indices)
 
     if debug:
