@@ -2,10 +2,10 @@
 This file contains functions that write or load data.
 """
 import os
-from pathlib import Path
+import numpy as np
 import json
 import pickle
-import numpy as np
+from pathlib import Path
 
 REPO_ROOT = os.path.realpath(os.path.join(os.path.dirname(__file__),
                                           os.pardir))

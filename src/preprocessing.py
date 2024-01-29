@@ -1,12 +1,11 @@
+import os
+import numpy as np
 import pandas as pd
 from datetime import timedelta
-from datetime import datetime
-import numpy as np
 from pathlib import Path
 from data_tools import *
 import data_io
 import requests
-import os
 import analysis
 
 REPO_ROOT = os.path.realpath(os.path.join(os.path.dirname(__file__), os.pardir))
