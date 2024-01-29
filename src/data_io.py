@@ -11,6 +11,18 @@ REPO_ROOT = os.path.realpath(os.path.join(os.path.dirname(__file__),
 DATA_DIR = os.path.join(REPO_ROOT, 'dat')
 TRAIN_DATA_DIR = os.path.join(DATA_DIR, 'train_data', 'frankfurt_hbf')
 STATION_NAMES_BASENAME = 'station_names.json'
+GAIN_VALS_BASENAME = 'gain_values.json'
+
+
+def load_error_msg(filepath, descr, from_repo):
+    print(f"Could not find the {descr} file.")
+    print(f"It should be located at {filepath}.")
+    if from_repo:
+        print("It should be contained in the git repo.")
+        print("If the file is not present, \
+                ensure you didn't accidentally delete it.")
+    else:
+        print("Please make sure you ran the preprocessing script first.")
 
 
 def write_json(content, basename, *dirs):
@@ -61,15 +73,16 @@ def load_incoming_outgoing_conns():
     - outgoing: Pandas dataframe containing trains
         that depart from Frankfurt Hbf
     """
+    filepath_inc = os.path.join(TRAIN_DATA_DIR, 'incoming.pkl')
+    filepath_out = os.path.join(TRAIN_DATA_DIR, 'outgoing.pkl')
     try:
-        with open(os.path.join(TRAIN_DATA_DIR, 'incoming.pkl'), 'rb') as file:
+        with open(filepath_inc, 'rb') as file:
             incoming = pickle.load(file)
-        with open(os.path.join(TRAIN_DATA_DIR, 'outgoing.pkl'), 'rb') as file:
+        with open(filepath_out, 'rb') as file:
             outgoing = pickle.load(file)
         return incoming, outgoing
     except FileNotFoundError:
-        print("Could not find the train database files.")
-        print("Please make sure you ran the preprocessing script first.")
+        load_error_msg(filepath_inc, "train database", False)
         raise
 
 
@@ -86,11 +99,7 @@ def load_station_subset():
         with open(filepath, 'r', encoding='utf-8') as file:
             return set(json.loads(file.read()))
     except FileNotFoundError:
-        print("Could not find the station subset json file.")
-        print(f"It should be located at {filepath}.")
-        print("It should be contained in the git repo.")
-        print("If the file is not present, \
-                ensure you didn't accidentally delete it.")
+        load_error_msg(filepath, "station subset json", True)
         raise
 
 
@@ -109,11 +118,7 @@ def load_directions():
         with open(filepath, 'r', encoding='utf-8') as file:
             return json.loads(file.read())
     except FileNotFoundError:
-        print("Could not find the directions json file.")
-        print(f"It should be located at {filepath}.")
-        print("It should be contained in the git repo.")
-        print("If the file is not present, \
-                ensure you didn't accidentally delete it.")
+        load_error_msg(filepath, "directions json", True)
         raise
 
 
@@ -132,7 +137,5 @@ def load_unique_station_names():
             sn_dict = json.loads(file.read())
             return set(sn_dict['in']), set(sn_dict['out']), set(sn_dict['all'])
     except FileNotFoundError:
-        print("Could not find the station names json file.")
-        print(f"It should be located at {filepath}.")
-        print("Please make sure you ran the preprocessing script first.")
+        load_error_msg(filepath, "station names json", False)
         raise
