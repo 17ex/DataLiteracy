@@ -11,8 +11,7 @@ REPO_ROOT = os.path.realpath(os.path.join(os.path.dirname(__file__),
                                           os.pardir))
 sys.path.insert(1, os.path.join(REPO_ROOT, 'src'))
 from data_tools import format_station_name_file, load_excluded_pairs
-import general_functions as general
-import exact_stop_functions as exact_stop
+import analysis
 import data_io
 
 station_subset = data_io.load_station_subset()
@@ -59,11 +58,11 @@ for origin in unique_stations_in:
                 # and log it. Should not get called for that case though.
                 continue
         print(destination)
-        delay_no_wait = exact_stop.reachable_transfers(incoming_from_origin, outgoing, origin, destination, worst_case=True)
-        delay_avg_gain = exact_stop.reachable_transfers(incoming_from_origin, outgoing, origin, destination, gains=all_gains['average'])
-        delay_zero_gain = exact_stop.reachable_transfers(incoming_from_origin, outgoing, origin, destination, estimated_gain=0.0)
-        delay_avg_pos_gain = exact_stop.reachable_transfers(incoming_from_origin, outgoing, origin, destination, gains=all_gains['pos_avg'])
-        delay_theoretical_max_gain = exact_stop.reachable_transfers(incoming_from_origin, outgoing, origin, destination, estimated_gain=0.27)
+        delay_no_wait = analysis.reachable_transfers(incoming_from_origin, outgoing, origin, destination, worst_case=True)
+        delay_avg_gain = analysis.reachable_transfers(incoming_from_origin, outgoing, origin, destination, gains=all_gains['average'])
+        delay_zero_gain = analysis.reachable_transfers(incoming_from_origin, outgoing, origin, destination, estimated_gain=0.0)
+        delay_avg_pos_gain = analysis.reachable_transfers(incoming_from_origin, outgoing, origin, destination, gains=all_gains['pos_avg'])
+        delay_theoretical_max_gain = analysis.reachable_transfers(incoming_from_origin, outgoing, origin, destination, estimated_gain=0.27)
         delay_all_no_wait[destination] = delay_no_wait
         delay_all_avg_gain[destination] = delay_avg_gain
         delay_all_zero_gain[destination] = delay_zero_gain

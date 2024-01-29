@@ -12,8 +12,7 @@ REPO_ROOT = os.path.realpath(os.path.join(os.path.dirname(__file__),
                                           os.pardir))
 sys.path.insert(1, os.path.join(REPO_ROOT, 'src'))
 from data_tools import format_station_name_file, load_excluded_pairs
-import general_functions as general
-import exact_stop_functions as exact_stop
+import analysis
 import data_io
 
 ParallelPandas.initialize(n_cpu=6, split_factor=3, disable_pr_bar=False, show_vmem=True)
@@ -75,7 +74,7 @@ def calculate_delays_per_origin(origin):
     delay_all = {}
     for destination in \
             station_pairs.loc[station_pairs['origin'] == origin, 'destination']:
-        delay_all[destination] = exact_stop.reachable_transfers(
+        delay_all[destination] = analysis.reachable_transfers(
                incoming_from_origin,
                outgoing,
                origin,

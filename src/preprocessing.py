@@ -7,7 +7,7 @@ from data_tools import *
 import data_io
 import requests
 import os
-import general_functions as general
+import analysis
 
 REPO_ROOT = os.path.realpath(os.path.join(os.path.dirname(__file__), os.pardir))
 DATA_DIR = os.path.join(REPO_ROOT, "dat")
@@ -126,7 +126,7 @@ outgoing.to_pickle(os.path.join(OUTPUT_DIR, "outgoing.pkl"))
 
 
 data_io.write_unique_station_names(incoming, outgoing)
-data_io.write_gain_vals(general.find_gains_per_next_stop(incoming, outgoing))
+data_io.write_gain_vals(analysis.find_gains_per_next_stop(incoming, outgoing))
 
 
 # Download file containing train station coordinates
