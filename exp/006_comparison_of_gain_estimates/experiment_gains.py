@@ -18,17 +18,7 @@ import data_io
 station_subset = data_io.load_station_subset()
 incoming, outgoing = data_io.load_incoming_outgoing_conns()
 excluded_pairs = load_excluded_pairs()
-
-all_gains = general.find_gains_per_next_stop(incoming, outgoing)
-average_gain = {}
-pos_avg_gain = {}
-for key in all_gains.keys():
-    average_gain[key] = np.mean(all_gains[key])
-    positive_numbers = [num for num in all_gains[key] if num > 0]
-    pos_avg_gain[key] = np.mean(positive_numbers)
-    # TODO properly handle case when there are no direct connections
-    # (when the above are empty or 0)
-
+all_gains = data_io.load_gain_values("", True)
 directions = data_io.load_directions()
 unique_stations_in, unique_stations_out, _ = data_io.load_unique_station_names()
 
@@ -70,9 +60,9 @@ for origin in unique_stations_in:
                 continue
         print(destination)
         delay_no_wait = exact_stop.reachable_transfers(incoming_from_origin, outgoing, origin, destination, worst_case=True)
-        delay_avg_gain = exact_stop.reachable_transfers(incoming_from_origin, outgoing, origin, destination, gains=average_gain)
+        delay_avg_gain = exact_stop.reachable_transfers(incoming_from_origin, outgoing, origin, destination, gains=all_gains['average'])
         delay_zero_gain = exact_stop.reachable_transfers(incoming_from_origin, outgoing, origin, destination, estimated_gain=0.0)
-        delay_avg_pos_gain = exact_stop.reachable_transfers(incoming_from_origin, outgoing, origin, destination, gains=pos_avg_gain)
+        delay_avg_pos_gain = exact_stop.reachable_transfers(incoming_from_origin, outgoing, origin, destination, gains=all_gains['pos_avg'])
         delay_theoretical_max_gain = exact_stop.reachable_transfers(incoming_from_origin, outgoing, origin, destination, estimated_gain=0.27)
         delay_all_no_wait[destination] = delay_no_wait
         delay_all_avg_gain[destination] = delay_avg_gain

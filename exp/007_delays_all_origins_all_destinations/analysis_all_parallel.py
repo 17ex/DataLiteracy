@@ -21,29 +21,15 @@ USE_SUBSET = False
 station_subset = data_io.load_station_subset()
 incoming, outgoing = data_io.load_incoming_outgoing_conns()
 excluded_pairs = load_excluded_pairs()
+gain_vals = data_io.load_gain_values('average')
+directions = data_io.load_directions()
+unique_stations_in, unique_stations_out, _ = data_io.load_unique_station_names()
 
 # This is here to silence the warnings regarding chained assignment
 # that also display in the other experiments.
 # The warning should be a false positive,
 # and here it is silenced to allow for a progress bar to be shown.
 pd.options.mode.chained_assignment = None
-
-all_gains = general.find_gains_per_next_stop(incoming, outgoing)
-median_gain = {}
-average_gain = {}
-max_gain = {}
-pos_avg_gain = {}
-for key in all_gains.keys():
-    median_gain[key] = np.median(all_gains[key])
-    average_gain[key] = np.mean(all_gains[key])
-    max_gain[key] = np.amax(all_gains[key])
-    positive_numbers = [num for num in all_gains[key] if num > 0]
-    # TODO properly handle case when there are no direct connections
-    # (when the above are empty or 0)
-
-directions = data_io.load_directions()
-
-unique_stations_in, unique_stations_out, _ = data_io.load_unique_station_names()
 
 # Drop data we don't need
 del outgoing['origin']
@@ -94,7 +80,7 @@ def calculate_delays_per_origin(origin):
                outgoing,
                origin,
                destination,
-               gains=average_gain)
+               gains=gain_vals)
     data_io.write_json(delay_all,
                        f'delay_007_{format_station_name_file(origin)}.json',
                        'results', 'delay')

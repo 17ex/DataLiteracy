@@ -18,21 +18,7 @@ import data_io
 station_subset = data_io.load_station_subset()
 incoming, outgoing = data_io.load_incoming_outgoing_conns()
 excluded_pairs = load_excluded_pairs()
-
-# TODO move this to data_tools
-all_gains = general.find_gains_per_next_stop(incoming, outgoing)
-median_gain = {}
-average_gain = {}
-max_gain = {}
-pos_avg_gain = {}
-for key in all_gains.keys():
-    median_gain[key] = np.median(all_gains[key])
-    average_gain[key] = np.mean(all_gains[key])
-    max_gain[key] = np.amax(all_gains[key])
-    positive_numbers = [num for num in all_gains[key] if num > 0]
-    pos_avg_gain[key] = np.mean(positive_numbers)
-    # TODO properly handle case when there are no direct connections
-    # (when the above are empty or 0)
+gain_vals = data_io.load_gain_values('average')
 
 directions = data_io.load_directions()
 unique_stations_in, unique_stations_out, _ = data_io.load_unique_station_names()
@@ -71,7 +57,7 @@ for origin in unique_stations_in:
                 # and log it. Should not get called for that case though.
                 continue
         print(destination)
-        delay = exact_stop.reachable_transfers(incoming_from_origin, outgoing, origin, destination, gains=average_gain)
+        delay = exact_stop.reachable_transfers(incoming_from_origin, outgoing, origin, destination, gains=gain_vals)
         delay_all[destination] = delay
     data_io.write_json(delay_all,
                        f'delay_005_{format_station_name_file(origin)}.json',

@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import json
 import pickle
+import numpy as np
 
 REPO_ROOT = os.path.realpath(os.path.join(os.path.dirname(__file__),
                                           os.pardir))
@@ -60,6 +61,28 @@ def write_unique_station_names(incoming, outgoing):
                 "all": list(unique_stations)
             },
             STATION_NAMES_BASENAME)
+
+
+def write_gain_vals(all_gains):
+    median_gain = {}
+    average_gain = {}
+    max_gain = {}
+    pos_avg_gain = {}
+    for key in all_gains.keys():
+        median_gain[key] = np.median(all_gains[key]).item()
+        average_gain[key] = np.mean(all_gains[key]).item()
+        max_gain[key] = np.amax(all_gains[key]).item()
+        positive_numbers = [num for num in all_gains[key] if num > 0]
+        pos_avg_gain[key] = \
+            np.mean(positive_numbers).item() if len(positive_numbers) > 0 else 0
+    write_json(
+            {
+                "median": median_gain,
+                "average": average_gain,
+                "max": max_gain,
+                "pos_avg": pos_avg_gain
+            },
+            GAIN_VALS_BASENAME)
 
 
 def load_incoming_outgoing_conns():
@@ -138,4 +161,23 @@ def load_unique_station_names():
             return set(sn_dict['in']), set(sn_dict['out']), set(sn_dict['all'])
     except FileNotFoundError:
         load_error_msg(filepath, "station names json", False)
+        raise
+
+
+def load_gain_values(gain_key, return_all=False):
+    filepath = os.path.join(DATA_DIR, GAIN_VALS_BASENAME)
+    try:
+        with open(filepath, 'r', encoding='utf-8') as file:
+            gain_dict = json.loads(file.read())
+            if return_all:
+                return gain_dict
+            try:
+                return gain_dict[gain_key]
+            except KeyError as exc:
+                print("Invalid argument")
+                print("Argument gain_key has to be one of the following:")
+                print(gain_dict.keys())
+                raise RuntimeError from exc
+    except FileNotFoundError:
+        load_error_msg(filepath, "directions json", True)
         raise

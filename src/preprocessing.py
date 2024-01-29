@@ -7,6 +7,7 @@ from data_tools import *
 import data_io
 import requests
 import os
+import general_functions as general
 
 REPO_ROOT = os.path.realpath(os.path.join(os.path.dirname(__file__), os.pardir))
 DATA_DIR = os.path.join(REPO_ROOT, "dat")
@@ -48,6 +49,7 @@ result_out = data_out.groupby(['train', 'date', 'departure', 'origin'])[
         ].agg(list).reset_index()
 
 
+# TODO remove this
 # Interpolate delays for data points with 0 delay
 # when it is definitely an error in the data.
 changes = result_out.apply(fix_delays, axis=1)
@@ -61,6 +63,7 @@ for delay_list in result_out["delay"]:
 
 print(f"Set {total_changes} of {num_entries} wrong 0 delays to an interpolated value.")
 
+# TODO remove this
 # Remove entries from the df that don't have the same delay
 # for every incoming train per station, as there probably is
 # something wrong with the data point.
@@ -139,6 +142,7 @@ outgoing.to_pickle(os.path.join(OUTPUT_DIR, "outgoing.pkl"))
 
 
 data_io.write_unique_station_names(incoming, outgoing)
+data_io.write_gain_vals(general.find_gains_per_next_stop(incoming, outgoing))
 
 
 # Download file containing train station coordinates
@@ -146,7 +150,7 @@ coordinates_file = Path(os.path.join(DATA_DIR, "coordinates.csv"))
 if not coordinates_file.is_file():
     coordinates_file_url = "https://download-data.deutschebahn.com/static/datasets/haltestellen/D_Bahnhof_2020_alle.CSV"
     print(f"Downloading station files from: {coordinates_file_url}")
-    resp = requests.get(coordinates_file_url)
+    resp = requests.get(coordinates_file_url, timeout=10)
     if resp.ok:
         with open(coordinates_file, mode="wb") as f:
             f.write(resp.content)
