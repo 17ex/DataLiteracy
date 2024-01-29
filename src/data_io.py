@@ -75,3 +75,26 @@ def load_station_subset():
         print("If the file is not present, \
                 ensure you didn't accidentally delete it.")
         raise
+
+
+def load_directions():
+    """
+    Returns pre-defined 5 directions
+    (South, West, North, North East and East)
+    in which train stations can lie relative to Frankfurt(Main)Hbf.
+
+    Returns:
+    - directions: Dict containing as keys the directions, and as
+        values lists containing the corresponding train station names
+    """
+    filepath = os.path.join(DATA_DIR, 'directions.json')
+    try:
+        with open(filepath, 'r', encoding='utf-8') as file:
+            return json.loads(file.read())
+    except FileNotFoundError:
+        print("Could not find the directions json file.")
+        print(f"It should be located at {filepath}.")
+        print("It should be contained in the git repo.")
+        print("If the file is not present, \
+                ensure you didn't accidentally delete it.")
+        raise

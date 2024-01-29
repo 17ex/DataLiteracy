@@ -34,7 +34,7 @@ for key in all_gains.keys():
     # TODO properly handle case when there are no direct connections
     # (when the above are empty or 0)
 
-directions = general.get_directions()
+directions = data_io.load_directions()
 
 # TODO move this to data_tools (optional args incoming, outgoing)
 unique_stations_in = set()

@@ -19,7 +19,7 @@ station_subset = data_io.load_station_subset()
 incoming, outgoing = data_io.load_incoming_outgoing_conns()
 excluded_pairs = load_excluded_pairs()
 
-directions = general.get_directions()
+directions = data_io.load_directions()
 
 unique_stations_in = set()
 unique_stations_out = set()
