@@ -2,9 +2,12 @@
 This file contains functions that write or load data.
 """
 import os
+import sys
 import numpy as np
+import pandas as pd
 import json
 import pickle
+import requests
 from pathlib import Path
 
 REPO_ROOT = os.path.realpath(os.path.join(os.path.dirname(__file__),
@@ -13,6 +16,10 @@ DATA_DIR = os.path.join(REPO_ROOT, 'dat')
 TRAIN_DATA_DIR = os.path.join(DATA_DIR, 'train_data', 'frankfurt_hbf')
 STATION_NAMES_BASENAME = 'station_names.json'
 GAIN_VALS_BASENAME = 'gain_values.json'
+EXCLUDED_PAIRS_BASENAME = 'excluded_pairs.csv'
+EXCLUDED_PAIRS_FILE = os.path.join(DATA_DIR, EXCLUDED_PAIRS_BASENAME)
+COORDINATES_BASENAME = 'coordinates.csv'
+COORDINATES_FILE = os.path.join(DATA_DIR, COORDINATES_BASENAME)
 
 
 def load_error_msg(filepath, descr, from_repo):
@@ -24,6 +31,15 @@ def load_error_msg(filepath, descr, from_repo):
                 ensure you didn't accidentally delete it.")
     else:
         print("Please make sure you ran the preprocessing script first.")
+
+
+def filename_escape(input_string):
+    """
+    Replaces potentially problematic characters for filenames
+    """
+    output_string = input_string.replace('ä', 'ae').replace('ö', 'oe').replace('ü', 'ue')
+    output_string = output_string.replace('/', '-')
+    return output_string
 
 
 def write_json(content, basename, *dirs):
@@ -46,6 +62,13 @@ def write_json(content, basename, *dirs):
 
 
 def write_unique_station_names(incoming, outgoing):
+    """
+    Writes a file in the data directory containing
+    the names of the train stations we considered.
+    Names are stored separately for stations from which
+    a train connection exists to Frankfurt(Main)Hbf,
+    from Frankfurt(Main)Hbf, and all stations.
+    """
     unique_stations = set()
     unique_stations_in = set()
     unique_stations_out = set()
@@ -66,6 +89,9 @@ def write_unique_station_names(incoming, outgoing):
 
 
 def write_gain_vals(all_gains):
+    """
+    Saves the gain estimates in the data directory.
+    """
     median_gain = {}
     average_gain = {}
     max_gain = {}
@@ -85,6 +111,35 @@ def write_gain_vals(all_gains):
                 "pos_avg": pos_avg_gain
             },
             GAIN_VALS_BASENAME)
+
+def download_coordinates_file():
+    """
+    Downloads and stores a file containing information about
+    German train stations. See below for the source URL.
+    """
+    if not Path(COORDINATES_FILE).is_file():
+        coordinates_file_url = "https://download-data.deutschebahn.com/static/datasets/haltestellen/D_Bahnhof_2020_alle.CSV"
+        print(f"Downloading station files from: {coordinates_file_url}")
+        resp = requests.get(coordinates_file_url, timeout=10)
+        if resp.ok:
+            with open(COORDINATES_FILE, mode="wb") as file:
+                file.write(resp.content)
+        else:
+            print("WARNING: Download of coordinates.csv failed!")
+            print(f"Server replied status {resp.status_code}")
+            sys.exit(1)
+    else:
+        print("Station coordinate file already exists, skipping.")
+
+
+def write_excluded_station_pairs(excluded_pairs):
+    excluded_pairs.to_csv(EXCLUDED_PAIRS_FILE, index=False)
+
+
+def write_incoming_outgoing_conns(incoming, outgoing):
+    Path(TRAIN_DATA_DIR).mkdir(parents=True, exist_ok=True)
+    incoming.to_pickle(os.path.join(TRAIN_DATA_DIR, "incoming.pkl"))
+    outgoing.to_pickle(os.path.join(TRAIN_DATA_DIR, "outgoing.pkl"))
 
 
 def load_incoming_outgoing_conns():
@@ -167,6 +222,9 @@ def load_unique_station_names():
 
 
 def load_gain_values(gain_key, return_all=False):
+    """
+    Returns a dict containing gain estimates.
+    """
     filepath = os.path.join(DATA_DIR, GAIN_VALS_BASENAME)
     try:
         with open(filepath, 'r', encoding='utf-8') as file:
@@ -183,3 +241,23 @@ def load_gain_values(gain_key, return_all=False):
     except FileNotFoundError:
         load_error_msg(filepath, "directions json", True)
         raise
+
+
+def load_station_coordinates():
+    """
+    Returns a dataframe containing train stations
+    and their geographical coordinates.
+    """
+    return pd.read_csv(COORDINATES_FILE, sep=';',
+                       usecols=['NAME', 'Laenge', 'Breite'])
+
+
+def load_excluded_pairs():
+    """
+    Returns a set containing tuples (origin, destination)
+    of station names that should be ignored in the analysis.
+    """
+    excluded_pairs = set()
+    for _, origin, destination in pd.read_csv(EXCLUDED_PAIRS_FILE).itertuples():
+        excluded_pairs.add((origin, destination))
+    return excluded_pairs

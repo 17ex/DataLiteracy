@@ -5,13 +5,12 @@ REPO_ROOT = os.path.realpath(os.path.join(os.path.dirname(__file__),
                                           os.pardir,
                                           os.pardir))
 sys.path.insert(1, os.path.join(REPO_ROOT, 'src'))
-from data_tools import format_station_name_file, load_excluded_pairs
 import analysis
 import data_io
 
 station_subset = data_io.load_station_subset()
 incoming, outgoing = data_io.load_incoming_outgoing_conns()
-excluded_pairs = load_excluded_pairs()
+excluded_pairs = data_io.load_excluded_pairs()
 all_gains = data_io.load_gain_values("", True)
 directions = data_io.load_directions()
 unique_stations_in, unique_stations_out, _ = data_io.load_unique_station_names()
@@ -65,22 +64,22 @@ for origin in unique_stations_in:
         delay_all_theoretical_max_gain[destination] = delay_theoretical_max_gain
 
         data_io.write_json(delay_all_no_wait,
-                           f'delay_006_{format_station_name_file(origin)}.json',
+                           f'delay_006_{data_io.filename_escape(origin)}.json',
                            'results', 'no_wait'
                            )
         data_io.write_json(delay_all_avg_gain,
-                           f'delay_006_{format_station_name_file(origin)}.json',
+                           f'delay_006_{data_io.filename_escape(origin)}.json',
                            'results', 'avg_gain'
                            )
         data_io.write_json(delay_all_zero_gain,
-                           f'delay_006_{format_station_name_file(origin)}.json',
+                           f'delay_006_{data_io.filename_escape(origin)}.json',
                            'results', 'zero_gain'
                            )
         data_io.write_json(delay_all_avg_pos_gain,
-                           f'delay_006_{format_station_name_file(origin)}.json',
+                           f'delay_006_{data_io.filename_escape(origin)}.json',
                            'results', 'avg_pos_gain'
                            )
         data_io.write_json(delay_all_theoretical_max_gain,
-                           f'delay_006_{format_station_name_file(origin)}.json',
+                           f'delay_006_{data_io.filename_escape(origin)}.json',
                            'results', 'theoretical_max_gain'
                            )

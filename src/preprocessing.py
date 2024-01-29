@@ -120,41 +120,15 @@ outgoing = remove_wrong_outgoing_trains(outgoing)
 incoming['date'] = pd.to_datetime(incoming['date'])
 outgoing['date'] = pd.to_datetime(outgoing['date'])
 
-incoming.to_pickle(os.path.join(OUTPUT_DIR, "incoming.pkl"))
-outgoing.to_pickle(os.path.join(OUTPUT_DIR, "outgoing.pkl"))
+print("Determine station pairs to exclude from the analysis")
+excluded_pairs = determine_excluded_station_pairs(
+        data_io.load_station_coordinates(),
+        unique_station_names(data_in, data_out))
 
-
+print("Write to data directory")
+data_io.write_incoming_outgoing_conns(incoming, outgoing)
 data_io.write_unique_station_names(incoming, outgoing)
 data_io.write_gain_vals(analysis.find_gains_per_next_stop(incoming, outgoing))
-
-
-# Download file containing train station coordinates
-coordinates_file = Path(os.path.join(DATA_DIR, "coordinates.csv"))
-if not coordinates_file.is_file():
-    coordinates_file_url = "https://download-data.deutschebahn.com/static/datasets/haltestellen/D_Bahnhof_2020_alle.CSV"
-    print(f"Downloading station files from: {coordinates_file_url}")
-    resp = requests.get(coordinates_file_url, timeout=10)
-    if resp.ok:
-        with open(coordinates_file, mode="wb") as f:
-            f.write(resp.content)
-    else:
-        print("WARNING: Download of coordinates.csv failed!")
-        print(f"Server replied status {resp.status_code}")
-        exit(1)
-else:
-    print("Station coordinate file already exists, skipping.")
-
-
-# Create list of excluded origin, destination pairs
-# TODO Remove check for file existence, move to data_io
-exclusion_file = Path(os.path.join(DATA_DIR, "excluded_pairs.csv"))
-if not exclusion_file.is_file():
-    print("Determine station pairs to exclude from the analysis")
-    write_excluded_station_pairs(
-            pd.read_csv(coordinates_file, sep=';',
-                        usecols=['NAME', 'Laenge', 'Breite']),
-            unique_station_names(data_in, data_out),
-            exclusion_file
-            )
-else:
-    print("Station pair exclusion file already exists, skipping.")
+data_io.download_coordinates_file()
+# Create list of (origin, destination) pairs to exclude
+data_io.write_excluded_station_pairs(excluded_pairs)
