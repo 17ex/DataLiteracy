@@ -6,7 +6,9 @@ This is the **private** repository of our project for the
 Data Literacy course 2023/24 at the University of Tübingen.
 
 This repo accompanies our project report,
-which you can find under <!-- TODO link paper or say where it is in the repo-->.
+which is not publicly accessible at this time,
+and at this time, this repo is intended to be used by us
+and our course instructors only until the report is public as well.
 
 It contains all code we used in our project,
 as well as the **private** data we used,
