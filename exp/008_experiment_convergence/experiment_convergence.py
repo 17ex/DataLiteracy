@@ -82,11 +82,11 @@ def calculate_delays_nowait_maxgain_per_origin(origin):
         delay_all_theoretical_max_gain[destination] = delay_theoretical_max_gain
     data_io.write_json(delay_all_no_wait,
                        f'delay_008_{data_io.filename_escape(origin)}.json',
-                       'results', 'no_wait'
+                       'results', 'exp_008', 'no_wait'
                        )
     data_io.write_json(delay_all_theoretical_max_gain,
                        f'delay_008_{data_io.filename_escape(origin)}.json',
-                       'results', 'theoretical_max_gain'
+                       'results', 'exp_008', 'theoretical_max_gain'
                        )
 
 

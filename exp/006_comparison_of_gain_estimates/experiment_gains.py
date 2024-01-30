@@ -65,21 +65,21 @@ for origin in unique_stations_in:
 
         data_io.write_json(delay_all_no_wait,
                            f'delay_006_{data_io.filename_escape(origin)}.json',
-                           'results', 'no_wait'
+                           'results', 'exp_006', 'no_wait'
                            )
         data_io.write_json(delay_all_avg_gain,
                            f'delay_006_{data_io.filename_escape(origin)}.json',
-                           'results', 'avg_gain'
+                           'results', 'exp_006', 'avg_gain'
                            )
         data_io.write_json(delay_all_zero_gain,
                            f'delay_006_{data_io.filename_escape(origin)}.json',
-                           'results', 'zero_gain'
+                           'results', 'exp_006', 'zero_gain'
                            )
         data_io.write_json(delay_all_avg_pos_gain,
                            f'delay_006_{data_io.filename_escape(origin)}.json',
-                           'results', 'avg_pos_gain'
+                           'results', 'exp_006', 'avg_pos_gain'
                            )
         data_io.write_json(delay_all_theoretical_max_gain,
                            f'delay_006_{data_io.filename_escape(origin)}.json',
-                           'results', 'theoretical_max_gain'
+                           'results', 'exp_006', 'theoretical_max_gain'
                            )

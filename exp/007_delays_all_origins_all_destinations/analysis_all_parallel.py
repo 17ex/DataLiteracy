@@ -76,7 +76,7 @@ def calculate_delays_per_origin(origin):
                gains=gain_vals)
     data_io.write_json(delay_all,
                        f'delay_007_{data_io.filename_escape(origin)}.json',
-                       'results', 'delay')
+                       'results', 'exp_007', 'delay')
     return None
 
 
