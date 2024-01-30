@@ -1,4 +1,4 @@
-# DataLiteracy <!-- TODO replace with paper title-->
+# Switching Perspectives: Analysing train delays considering train transfer and cancellation
 
 ## About
 
@@ -82,7 +82,7 @@ will be stored in `dat/`, and enable you to also run the following:
         - Experiment:
             `python exp/006_comparison_of_gain_estimates/experiment_gains.py`
         - Plots:
-            
+
             `python fig/fig_mean_delays_heatmap.py` Creates:
             - `fig/plot_meanDelay_heatmap.pdf` (Figure 2 in the project report)
 
@@ -99,13 +99,13 @@ will be stored in `dat/`, and enable you to also run the following:
             correct-->
             - `fig/plot_meanDelay_reachability_switchTime.pdf`
                 (Figure 1 in the project report)
-            
+
             <!-- TODO replace with appropriate files, ensure this is correct-->
     - Experiment 8: Best and worst case convergence:
         - Experiment:
             `python exp/008_experiment_convergence/experiment_convergence.py`
         - Plots:
-            
+
             `python fig/fig_delay_decomposition.py` Creates: <!-- TODO no clue if this is
                 correct-->
             - `fig/plot_delay_decomposition.pdf` (Figure 4 in the project report)
