@@ -1,0 +1,21 @@
+# This file contains 10 random samples from the dataset
+# (and this is supposed to be a comment).
+# These are the columns:
+# origin, destination, date, planned departure, planned arrival, train number, delay in minutes, cancellation
+# where cancellation is one of:
+# - empty (not cancelled),
+# - Ausfall (Startbahnhof) (train did not arrive at origin station)
+# - Ausfall (Zielbahnhof) (train did not arrive at destination station)
+# The file should have no header.
+# As we only look at trains arriving at Frankfurt(Main)Hbf, all destinations
+# should be Frankfurt(Main)Hbf.
+Frankfurt am Main Flughafen Fernbahnhof,Frankfurt(Main)Hbf,13.08.2021,17:36,17:48,ICE 725,3,
+München Hbf,Frankfurt(Main)Hbf,19.10.2022,11:47,15:55,EC  218,0,
+Magdeburg Hbf,Frankfurt(Main)Hbf,31.07.2022,22:41,03:46,IC 60471,0,
+Lüneburg,Frankfurt(Main)Hbf,09.05.2023,12:59,17:09,ICE 1671,0,Ausfall (Startbahnhof)
+Dortmund Hbf,Frankfurt(Main)Hbf,19.04.2023,12:36,16:13,ICE 229,11,
+Treysa,Frankfurt(Main)Hbf,20.04.2022,13:37,15:09,ICE 1579,112,
+Aachen Hbf,Frankfurt(Main)Hbf,07.02.2022,15:39,17:40,ICE  17,2,
+Wuppertal Hbf,Frankfurt(Main)Hbf,14.06.2023,21:14,00:41,IC 2027,0,
+Gießen,Frankfurt(Main)Hbf,18.08.2023,14:23,15:09,ICE 1579,0,Ausfall (Zielbahnhof)
+Augsburg Hbf,Frankfurt(Main)Hbf,15.12.2021,10:16,13:40,IC 1290,0,

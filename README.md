@@ -51,6 +51,9 @@ of all long-distance trains between any
 German train station and the station Frankfurt(Main)Hbf,
 which we picked because of its central position within the German train network.
 
+A sample of the data set (for the public repo) can be found in
+`dat/train_data/frankfurt_hbf/{scraped_incoming_Frankfurt_Hbf.csv.SAMPLE,scraped_outgoing_Frankfurt_Hbf.csv.SAMPLE}`.
+
 ## How to reproduce our experiments
 
 ### How to run our code
