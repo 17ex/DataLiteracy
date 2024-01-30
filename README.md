@@ -82,34 +82,23 @@ will be stored in `dat/`, and enable you to also run the following:
         - Experiment:
             `python exp/006_comparison_of_gain_estimates/experiment_gains.py`
         - Plots:
-
-            `python fig/fig_mean_delays_heatmap.py` Creates:
-            - `fig/plot_meanDelay_heatmap.pdf` (Figure 2 in the project report)
-
-            `python fig/fig_gains.py` Creates: <!-- TODO no clue if this is
-            correct-->
+            `python fig/fig_gains.ipynb` Creates:
             - `fig/plot_meanDelay_gain.pdf` (Figure 3 in the project report)
-            <!-- TODO replace with appropriate file, ensure this is correct-->
     - Experiment 7: Mean delay of all origins to all destinations:
         - Experiment:
             `python exp/007_delays_all_origins_all_destinations/analysis_all_parallel.py`
         - Plots:
-
-            `python fig/mean_delays.py` Creates: <!-- TODO no clue if this is
-            correct-->
+            `fig/fig_meanDelays_heatmap.ipynb` Creates:
+            - `fig/plot_meanDelay_heatmap.pdf` (Figure 2 in the project report)
+            `fig/mean_delays.py` Creates:
             - `fig/plot_meanDelay_reachability_switchTime.pdf`
                 (Figure 1 in the project report)
-
-            <!-- TODO replace with appropriate files, ensure this is correct-->
     - Experiment 8: Best and worst case convergence:
         - Experiment:
             `python exp/008_experiment_convergence/experiment_convergence.py`
         - Plots:
-
-            `python fig/fig_delay_decomposition.py` Creates: <!-- TODO no clue if this is
-                correct-->
+            `fig/fig_delayDecomposition.ipynb` Creates:
             - `fig/plot_delay_decomposition.pdf` (Figure 4 in the project report)
-            <!-- TODO replace with appropriate files, ensure this is correct-->
 
 Above, it is assumed that your working
 directory is set to the root directory of this repo.
