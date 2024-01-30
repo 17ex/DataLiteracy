@@ -31,7 +31,7 @@ def read_data(main_folder_path, compare_gains=False):
                 if filename.endswith('.json'):
                     file_path = os.path.join(folder_path, filename)
                     
-                    key_city = filename.split('_')[name_position].replace(".json", "")
+                    key_city = filename.split('_')[2].replace(".json", "")
                     key_city = key_city.replace('ä', 'ae').replace('ö', 'oe').replace('ü', 'ue')
 
                     df = pd.read_json(file_path, orient='index')
@@ -45,7 +45,7 @@ def read_data(main_folder_path, compare_gains=False):
                 file_path = os.path.join(main_folder_path, filename)
                 
 
-                key = filename.split('_')[name_position].replace(".json", "")
+                key = filename.split('_')[2].replace(".json", "")
 
                 key = key.replace('ä', 'ae').replace('ö', 'oe').replace('ü', 'ue')
 

@@ -1,4 +1,4 @@
-# DataLiteracy <!-- TODO replace with paper title-->
+# Switching Perspectives: Analysing train delays considering train transfer and cancellation
 
 ## About
 
@@ -6,15 +6,20 @@ This is the **private** repository of our project for the
 Data Literacy course 2023/24 at the University of Tübingen.
 
 This repo accompanies our project report,
-which you can find under <!-- TODO link paper or say where it is in the repo-->.
+which is not publicly accessible at this time,
+and at this time, this repo is intended to be used by us
+and our course instructors only until the report is public as well.
 
 It contains all code we used in our project,
 as well as the **private** data we used,
 for which we have permission to share it with
 the course instructors only.
+The dataset is only contained in the *full-dataset* branch
+(so we can fork off main without the dataset),
+you can checkout that branch to see/use the dataset.
 
 The public repo, which does not contain this data,
-can be found here: <!-- TODO link other repo-->
+can be found here: <https://github.com/17ex/DataLiteracyPublic>
 
 ## Repo structure
 
@@ -38,7 +43,7 @@ The structure of this repo should be somewhat self-explanatory:
 We used data provided by `bahn-analysen.de` (by B&P Data Solutions UG).
 You can look at
 `dat/train_data/frankfurt_hbf/{scraped_incoming_Frankfurt_Hbf.csv,scraped_outgoing_Frankfurt_Hbf.csv}`
-to see how it is structured.
+to see how it is structured (again, this is only in *full-dataset* branch).
 It consists of two csv-files, one for incoming train connections to
 Frankfurt(Main)Hbf, and one for outgoing train connections from
 Frankfurt(Main)Hbf.
@@ -46,7 +51,7 @@ Every row contains an origin station, a destination station, the date, planned
 departure, planned arrival, the train name, the delay at the destination and
 whether the train was cancelled or not.
 
-Contained is data from 20.01.2021 to 03.12.2023
+Contained is data from 20/01/2021 to 03/12/2023
 of all long-distance trains between any
 German train station and the station Frankfurt(Main)Hbf,
 which we picked because of its central position within the German train network.
@@ -79,30 +84,25 @@ will be stored in `dat/`, and enable you to also run the following:
         - Experiment:
             `python exp/006_comparison_of_gain_estimates/experiment_gains.py`
         - Plots:
-            `python fig/fig_gains.py` Creates: <!-- TODO no clue if this is
-            correct-->
+            `python fig/fig_gains.ipynb` Creates:
             - `fig/plot_meanDelay_gain.pdf` (Figure 3 in the project report)
-            <!-- TODO replace with appropriate file, ensure this is correct-->
     - Experiment 7: Mean delay of all origins to all destinations:
         - Experiment:
             `python exp/007_delays_all_origins_all_destinations/analysis_all_parallel.py`
         - Plots:
-            `python fig/mean_delays.py` Creates: <!-- TODO no clue if this is
-            correct-->
+            `fig/fig_meanDelays_heatmap.ipynb` Creates:
+            - `fig/plot_meanDelay_heatmap.pdf` (Figure 2 in the project report)
+            `fig/mean_delays.py` Creates:
             - `fig/plot_meanDelay_reachability_switchTime.pdf`
                 (Figure 1 in the project report)
-            - `fig/plot_meanDelay_heatmap.pdf` (Figure 2 in the project report)
-            <!-- TODO replace with appropriate files, ensure this is correct-->
     - Experiment 8: Best and worst case convergence:
         - Experiment:
             `python exp/008_experiment_convergence/experiment_convergence.py`
         - Plots:
-            `python fig/fig_delay_decomposition.py` Creates: <!-- TODO no clue if this is
-                correct-->
+            `fig/fig_delayDecomposition.ipynb` Creates:
             - `fig/plot_delay_decomposition.pdf` (Figure 4 in the project report)
-            <!-- TODO replace with appropriate files, ensure this is correct-->
 
-Note that in the above, it is assumed that your working
+Above, it is assumed that your working
 directory is set to the root directory of this repo.
 This is not necessary, but if you have a different working
 directory, ensure that you use the correct file paths.
