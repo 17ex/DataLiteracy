@@ -7,7 +7,17 @@ import seaborn as sns
 
 
 
-def read_data(main_folder_path, name_position=2, compare_gains=False):
+def read_data(main_folder_path, compare_gains=False):
+    """Reads json files containing delay data for origin-destination pairs
+
+    Args:
+        main_folder_path (str): Path
+        compare_gains (bool, optional): If different gain calculation need to be loaded. 
+            Defaults to False.
+
+    Returns:
+        dict: delay data for gains and origin-destination pairs
+    """
     df_dict = {}
 
     if compare_gains:
@@ -46,10 +56,22 @@ def read_data(main_folder_path, name_position=2, compare_gains=False):
         
     return df_dict
 
-def get_mean_delays(gain_dict, max_transfer_time=60, compare_gains=False):
-    dict_mean_delays = {}
+def get_mean_delays(gain_dict, max_transfer_time=60, compare_gains=False, cases_needed=False):
+    """Calculates the mean delays over the origin destination pairs.
+
+    Args:
+        gain_dict (dict): Delay data for gains and origin-destination pairs
+        max_transfer_time (int, optional): maximally allowed scheduled transfert time in min. Defaults to 60.
+        compare_gains (bool, optional): If different gain calculation need to be loaded. 
+            Defaults to False.
+        cases_needed (bool, optional): If the reachability cases are needed. Defaults to False.
+
+    Returns:
+        dict: mean delays and reachaility cases 
+    """
     if not compare_gains:
         gain_dict = {'avg_gain': gain_dict}
+    dict_mean_delays = {}
 
     for key_gain, df_dict in gain_dict.items():
         empty = pd.DataFrame(index=range(1, max_transfer_time + 1), columns=['mean_delay', 'reachable1', 'reachable2', 'reachable3'])
@@ -57,19 +79,19 @@ def get_mean_delays(gain_dict, max_transfer_time=60, compare_gains=False):
         delay_matrix = [[] for _ in range(max_transfer_time)]
 
         for key, df in df_dict.items():
-
             for i in range(len(df)):
                 row = df.iloc[i]
                 valid_minutes = np.array(row['switch time']) <= max_transfer_time
                 minutes = np.array(row['switch time'])[valid_minutes].astype(int)
                 delays = np.array(row['delay'])[valid_minutes]
+                cases = np.array(row['reachable'])[valid_minutes]
 
                 for minute, delay in zip(minutes, delays):
                     delay_matrix[minute-1].append(delay)
 
-                cases = np.array(row['reachable'])[valid_minutes]
-                for case in [1, 2, 3]:
-                    empty.loc[minutes[cases == case], f'reachable{case}'] += 1
+                if cases_needed:
+                    for minute, case in zip(minutes, cases):
+                        empty.loc[minute, f'reachable{case}'] += 1
 
         means = [np.mean(minute).round(2) if minute else np.nan for minute in delay_matrix]
         empty['mean_delay'] = means
