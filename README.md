@@ -47,11 +47,11 @@ departure, planned arrival, the train name, the delay at the destination and
 whether the train was cancelled or not.
 
 Contained is data from 20.01.2021 to 03.12.2023
-of all long-distance trains that travel between any
+of all long-distance trains between any
 German train station and the station Frankfurt(Main)Hbf,
 which we picked because of its central position within the German train network.
 
-## How to reproduce our results
+## How to reproduce our experiments
 
 ### How to run our code
 
@@ -76,28 +76,28 @@ will be stored in `dat/`, and enable you to also run the following:
         - Experiment:
             `python exp/006_comparison_of_gain_estimates/experiment_gains.py`
         - Plots:
-            `python fig/fig_gains.py`: Creates <!-- TODO no clue if this is
+            `python fig/fig_gains.py` Creates: <!-- TODO no clue if this is
             correct-->
-                - `fig/plot_meanDelay_gain.pdf` (Figure 3 in the project report)
-                <!-- TODO replace with appropriate file, ensure this is correct-->
+            - `fig/plot_meanDelay_gain.pdf` (Figure 3 in the project report)
+            <!-- TODO replace with appropriate file, ensure this is correct-->
     - Experiment 7: Mean delay of all origins to all destinations:
         - Experiment:
             `python exp/007_delays_all_origins_all_destinations/analysis_all_parallel.py`
         - Plots:
-            `python fig/mean_delays.py`: Creates <!-- TODO no clue if this is
+            `python fig/mean_delays.py` Creates: <!-- TODO no clue if this is
             correct-->
-                - `fig/plot_meanDelay_reachability_switchTime.pdf`
-                    (Figure 1 in the project report)
-                - `fig/plot_meanDelay_heatmap.pdf` (Figure 2 in the project report)
-                <!-- TODO replace with appropriate files, ensure this is correct-->
+            - `fig/plot_meanDelay_reachability_switchTime.pdf`
+                (Figure 1 in the project report)
+            - `fig/plot_meanDelay_heatmap.pdf` (Figure 2 in the project report)
+            <!-- TODO replace with appropriate files, ensure this is correct-->
     - Experiment 8: Best and worst case convergence:
         - Experiment:
             `python exp/008_experiment_convergence/experiment_convergence.py`
         - Plots:
-            `python fig/fig_delay_decomposition.py`: Creates <!-- TODO no clue if this is
-            correct-->
-                - `fig/plot_delay_decomposition.pdf` (Figure 4 in the project report)
-                <!-- TODO replace with appropriate files, ensure this is correct-->
+            `python fig/fig_delay_decomposition.py` Creates: <!-- TODO no clue if this is
+                correct-->
+            - `fig/plot_delay_decomposition.pdf` (Figure 4 in the project report)
+            <!-- TODO replace with appropriate files, ensure this is correct-->
 
 Note that in the above, it is assumed that your working
 directory is set to the root directory of this repo.
