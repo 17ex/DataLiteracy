@@ -1,23 +1,16 @@
-import pandas as pd
-import numpy as np
-import json
-import pickle
-from pathlib import Path
-import sys
 import os
-
+import sys
+import pandas as pd
 REPO_ROOT = os.path.realpath(os.path.join(os.path.dirname(__file__),
                                           os.pardir,
                                           os.pardir))
 sys.path.insert(1, os.path.join(REPO_ROOT, 'src'))
-from data_tools import format_station_name_file, load_excluded_pairs
-import general_functions as general
-import exact_stop_functions as exact_stop
+import analysis
 import data_io
 
 station_subset = data_io.load_station_subset()
 incoming, outgoing = data_io.load_incoming_outgoing_conns()
-excluded_pairs = load_excluded_pairs()
+excluded_pairs = data_io.load_excluded_pairs()
 gain_vals = data_io.load_gain_values('average')
 
 directions = data_io.load_directions()
@@ -57,8 +50,8 @@ for origin in unique_stations_in:
                 # and log it. Should not get called for that case though.
                 continue
         print(destination)
-        delay = exact_stop.reachable_transfers(incoming_from_origin, outgoing, origin, destination, gains=gain_vals)
+        delay = analysis.reachable_transfers(incoming_from_origin, outgoing, origin, destination, gains=gain_vals)
         delay_all[destination] = delay
     data_io.write_json(delay_all,
-                       f'delay_005_{format_station_name_file(origin)}.json',
-                       'results', 'delay')
+                       f'delay_005_{data_io.filename_escape(origin)}.json',
+                       'results', 'exp_005', 'delay')

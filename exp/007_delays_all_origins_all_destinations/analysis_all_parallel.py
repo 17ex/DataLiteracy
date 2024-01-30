@@ -1,26 +1,19 @@
-import pandas as pd
-import numpy as np
-import json
-import pickle
-from pathlib import Path
-from parallel_pandas import ParallelPandas
-import sys
 import os
-
+import sys
+import pandas as pd
+from parallel_pandas import ParallelPandas
 REPO_ROOT = os.path.realpath(os.path.join(os.path.dirname(__file__),
                                           os.pardir,
                                           os.pardir))
 sys.path.insert(1, os.path.join(REPO_ROOT, 'src'))
-from data_tools import format_station_name_file, load_excluded_pairs
-import general_functions as general
-import exact_stop_functions as exact_stop
+import analysis
 import data_io
 
 ParallelPandas.initialize(n_cpu=6, split_factor=3, disable_pr_bar=False, show_vmem=True)
 USE_SUBSET = False
 station_subset = data_io.load_station_subset()
 incoming, outgoing = data_io.load_incoming_outgoing_conns()
-excluded_pairs = load_excluded_pairs()
+excluded_pairs = data_io.load_excluded_pairs()
 gain_vals = data_io.load_gain_values('average')
 directions = data_io.load_directions()
 unique_stations_in, unique_stations_out, _ = data_io.load_unique_station_names()
@@ -75,15 +68,15 @@ def calculate_delays_per_origin(origin):
     delay_all = {}
     for destination in \
             station_pairs.loc[station_pairs['origin'] == origin, 'destination']:
-        delay_all[destination] = exact_stop.reachable_transfers(
+        delay_all[destination] = analysis.reachable_transfers(
                incoming_from_origin,
                outgoing,
                origin,
                destination,
                gains=gain_vals)
     data_io.write_json(delay_all,
-                       f'delay_007_{format_station_name_file(origin)}.json',
-                       'results', 'delay')
+                       f'delay_007_{data_io.filename_escape(origin)}.json',
+                       'results', 'exp_007', 'delay')
     return None
 
 

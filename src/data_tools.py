@@ -1,16 +1,14 @@
 """
 This file contains functions that work directly on data.
-Almost all of it is used for data preprocessing in the
-preprocessing.py script, but a few of these functions
-are also used in the experiments.
+The functions contained in here are only used in preprocessing.
 """
+import os
+import math
+import numpy as np
 import pandas as pd
 from datetime import timedelta
 from datetime import datetime
-import numpy as np
 from pathlib import Path
-import math
-import os
 import data_io
 
 
@@ -178,13 +176,6 @@ def remove_wrong_outgoing_trains(outgoing):
         lambda out_id: out_id not in out_ids_of_wrong_trains)]
 
 
-# TODO move to data_io
-def format_station_name_file(input_string):
-    output_string = input_string.replace('ä', 'ae').replace('ö', 'oe').replace('ü', 'ue')
-    output_string = output_string.replace('/', '-')
-    return output_string
-
-
 def unique_station_names(data_in, data_out):
     incoming_stations = set(data_in["origin"])
     outgoing_stations = set(data_out["destination"])
@@ -229,12 +220,11 @@ def pair_exclusion_criterion(origin_coords, destination_coords, frankfurt_coords
     )
 
 
-# TODO just return the pairs, move write to data_io
-def write_excluded_station_pairs(station_coords, stations, filename):
+def determine_excluded_station_pairs(station_coords, stations):
     station_coords = station_coords[station_coords['NAME'].isin(stations)]
     frankfurt_coords = station_coords[
             station_coords["NAME"] == "Frankfurt(Main)Hbf"] \
-                    .iloc[0][['Laenge', 'Breite']]
+        .iloc[0][['Laenge', 'Breite']]
     station_pairs = station_coords.merge(station_coords, how='cross')
 
     def exclusion_fun(coord_pair):
@@ -246,21 +236,5 @@ def write_excluded_station_pairs(station_coords, stations, filename):
     station_pairs = station_pairs[
             station_pairs.apply(exclusion_fun, axis=1)
             ]
-    station_pairs[['NAME_x', 'NAME_y']] \
-        .rename(columns={'NAME_x': 'origin', 'NAME_y': 'destination'}) \
-        .to_csv(filename, index=False)
-
-
-def load_excluded_pairs():
-    """
-    Returns a set containing tuples (origin, destination)
-    of station names that should be ignored in the analysis.
-    """
-    filename = os.path.realpath(os.path.join(os.path.dirname(__file__),
-                                             os.pardir,
-                                             "dat",
-                                             "excluded_pairs.csv"))
-    excluded_pairs = set()
-    for _, origin, destination in pd.read_csv(filename).itertuples():
-        excluded_pairs.add((origin, destination))
-    return excluded_pairs
+    return station_pairs[['NAME_x', 'NAME_y']] \
+        .rename(columns={'NAME_x': 'origin', 'NAME_y': 'destination'})
