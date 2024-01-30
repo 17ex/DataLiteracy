@@ -46,7 +46,7 @@ Every row contains an origin station, a destination station, the date, planned
 departure, planned arrival, the train name, the delay at the destination and
 whether the train was cancelled or not.
 
-Contained is data from 20.01.2021 to 03.12.2023
+Contained is data from 20/01/2021 to 03/12/2023
 of all long-distance trains between any
 German train station and the station Frankfurt(Main)Hbf,
 which we picked because of its central position within the German train network.
