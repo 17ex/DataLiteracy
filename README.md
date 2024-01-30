@@ -12,9 +12,12 @@ It contains all code we used in our project,
 as well as the **private** data we used,
 for which we have permission to share it with
 the course instructors only.
+The dataset is only contained in the *full-dataset* branch
+(so we can fork off main without the dataset),
+you can checkout that branch to see/use the dataset.
 
 The public repo, which does not contain this data,
-can be found here: <!-- TODO link other repo-->
+can be found here: <https://github.com/17ex/DataLiteracyPublic>
 
 ## Repo structure
 
@@ -38,7 +41,7 @@ The structure of this repo should be somewhat self-explanatory:
 We used data provided by `bahn-analysen.de` (by B&P Data Solutions UG).
 You can look at
 `dat/train_data/frankfurt_hbf/{scraped_incoming_Frankfurt_Hbf.csv,scraped_outgoing_Frankfurt_Hbf.csv}`
-to see how it is structured.
+to see how it is structured (again, this is only in *full-dataset* branch).
 It consists of two csv-files, one for incoming train connections to
 Frankfurt(Main)Hbf, and one for outgoing train connections from
 Frankfurt(Main)Hbf.
